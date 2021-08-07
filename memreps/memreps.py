@@ -5,6 +5,7 @@ from typing import Any, Callable, Generator, Iterable, Literal, Protocol
 
 import attr
 import exp4
+import funcy as fn
 
 
 Atom = Any
@@ -79,8 +80,8 @@ def create_learner(
 
          2. Comparison: Returns □ ∈ {'≺', '≻', '=', '||'} such that x □ y.
 
-         3. Equivalence: Returns (Query, Response) pair proving that φ ≠ φ*.
-            If φ = φ*, then no return is expected. The query and response
+         3. Equivalence: Returns (Query, Response) pair proving that φ ̸≡ φ*.
+            If φ ≡ φ*, then no return is expected. The query and response
             correspond to membership or comparisons.
     """
     assumptions = []
@@ -104,11 +105,11 @@ def create_learner(
             query = query_selector(queries)
 
         response = yield query
-        
-        if query[0] != '≡':  # Equiv responses contain query already. 
+
+        if query[0] != '≡':  # Equiv responses contain query already.
             query_selector.update(response)
             response = (query, response)
- 
+
         assumptions.append(response)
 
 
@@ -116,6 +117,7 @@ def create_learner(
 
 # TODO: implement experts.
 EXPERTS = []
+ResultMap = dict[MemResponse | CmpResponse, float]
 
 
 @attr.s(auto_detect=True, auto_attribs=True)
@@ -123,11 +125,12 @@ class QuerySelector:
     gen_concepts: ConceptClass
     mem_cost: float
     cmp_cost: float
+    n_trials: int = 10  # Max number of concepts to use for monte carlo.
 
     # Internal State
     player: exp4.Player = attr.ib(factory=exp4.exp4)
     loss: float | None = None
-    loss_map: dict[MemResponse | CmpResponse, float] = attr.ib(factory=dict)
+    loss_map: ResultMap = attr.ib(factory=dict)
 
     def __call__(self, queries: list[Query]) -> Query:
         summaries = [self.summarize(q) for q in queries]
@@ -146,5 +149,22 @@ class QuerySelector:
     def update(self, response: MemResponse | CmpResponse):
         self.loss = self.loss_map[response]
 
-    def summarize(self) -> dict[MemResponse | CmpResponse, float]:
-        ...
+    def summarize(self, query: Query) -> ResultMap:
+        match query:
+            case ('∈', atom):
+                tests = {'∈': lambda c: x in c, '∉': lambda c: x not in c}
+
+            case ('≺', (left, right)):
+                tests = {
+                    '≺': lambda c: (left in c) <= (right in c),
+                    '≻': lambda c: (right in c) <= (left in c),
+                    '=': lambda c: (left in c) == (right in c),
+                    '||': lambda c: True,
+                }
+
+            case _:
+                raise NotImplementedError
+
+        # Estimate concept class reduction per outcome via naïve monte carlo.
+        concepts = fn.take(self.n_trials, gen_concepts())
+        return {k: sum(map(t, concepts)) / len(concepts) for k, t in tests}

@@ -61,6 +61,14 @@ pycodestyle = ">=2.7.0,<2.8.0"
 pyflakes = ">=2.3.0,<2.4.0"
 
 [[package]]
+name = "funcy"
+version = "1.16"
+description = "A fancy and practical functional tools"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "iniconfig"
 version = "1.1.1"
 description = "iniconfig: brain-dead simple config-ini parsing"
@@ -215,7 +223,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "bdddb56dd84aa53d65f76dd9d62f36a63e6a40127621850b9beceb35f8b26c71"
+content-hash = "04aac78614f637e26f26ef950b912aac4c9c43e1f9b94d2691bda5a560f4d4ed"
 
 [metadata.files]
 atomicwrites = [
@@ -241,6 +249,10 @@ exp4 = [
 flake8 = [
     {file = "flake8-3.9.2-py2.py3-none-any.whl", hash = "sha256:bf8fd333346d844f616e8d47905ef3a3384edae6b4e9beb0c5101e25e3110907"},
     {file = "flake8-3.9.2.tar.gz", hash = "sha256:07528381786f2a6237b061f6e96610a4167b226cb926e2aa2b6b1d78057c576b"},
+]
+funcy = [
+    {file = "funcy-1.16-py2.py3-none-any.whl", hash = "sha256:1d3fc5d42cf7564a6b2be04042d0df7a50c77903cf760a34786d0c9ebd659b25"},
+    {file = "funcy-1.16.tar.gz", hash = "sha256:2775409b7dc9106283f1224d97e6df5f2c02e7291c8caed72764f5a115dffb50"},
 ]
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
