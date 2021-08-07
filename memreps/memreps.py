@@ -7,6 +7,7 @@ from typing import (Any, Callable, Counter, Generator,
 import attr
 import exp4
 import funcy as fn
+from exp4.algo import softmax
 
 
 Atom = Any
@@ -118,30 +119,44 @@ def create_learner(
 
 
 def worst_case_smax(summaries, _):
-    ...
+    vals = [min(s.values()) for s in summaries]
+    return softmax(vals)
+
+
+def worst_case_smax_comparable(summaries, _):
+    vals = [min(v for k, v in s.items() if k != '||') for s in summaries]
+    return softmax(vals)
 
 
 def historical_smax(summaries, hist):
-    ...
+    vals = []
+    for summary in summaries:
+        kind = '∈' if '∈' in summary else '≺'
+        val = sum(v * hist[k] for k, v in summary.items())
+        vals.append(val)
+    return softmax(vals)
 
 
-# TODO: implement experts.
 EXPERTS = [
     lambda summaries, _: [float('∈' in s) for s in summaries],
     lambda summaries, _: [float('≺' in s) for s in summaries],
     worst_case_smax,
+    worst_case_smax_comparable,
     historical_smax,
 ]
+
+
 ResultMap = dict[MemResponse | CmpResponse, float]
 Hist = dict[Literal['∈', '≺'], Counter[MemResponse, CmpResponse, float]]
 
 
 @attr.s(auto_detect=True, auto_attribs=True)
 class QuerySelector:
+    # Parameters
     gen_concepts: ConceptClass
     mem_cost: float
     cmp_cost: float
-    n_trials: int = 10  # Max number of concepts to use for monte carlo.
+    n_trials: int = 10  # Used for monte carlo summarization.
 
     # Internal State
     player: exp4.Player = attr.ib(factory=exp4.exp4)
@@ -156,7 +171,7 @@ class QuerySelector:
         arm = self.player.send((self.loss, advice))
         query = queries[arm]
 
-        # Setup loss_map
+        # Setup loss_map.
         query_cost = self.mem_cost if query[0] == '∈' else self.cmp_cost
         query_cost /= max(self.mem_cost, self.cmp_cost)
         self.loss_map = {k: (query_cost + s) / 2 for k, s in summaries[arm]}
