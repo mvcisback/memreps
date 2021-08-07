@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Callable, Generator, Iterable, Literal, Protocol
+from typing import (Any, Callable, Counter, Generator,
+                    Iterable, Literal, Protocol)
 
 import attr
 import exp4
@@ -115,9 +116,24 @@ def create_learner(
 
 # ===================== Bandit Details =====================
 
+
+def worst_case_smax(summaries, _):
+    ...
+
+
+def historical_smax(summaries, hist):
+    ...
+
+
 # TODO: implement experts.
-EXPERTS = []
+EXPERTS = [
+    lambda summaries, _: [float('∈' in s) for s in summaries],
+    lambda summaries, _: [float('≺' in s) for s in summaries],
+    worst_case_smax,
+    historical_smax,
+]
 ResultMap = dict[MemResponse | CmpResponse, float]
+Hist = dict[Literal['∈', '≺'], Counter[MemResponse, CmpResponse, float]]
 
 
 @attr.s(auto_detect=True, auto_attribs=True)
@@ -131,10 +147,11 @@ class QuerySelector:
     player: exp4.Player = attr.ib(factory=exp4.exp4)
     loss: float | None = None
     loss_map: ResultMap = attr.ib(factory=dict)
+    hist: Hist = attr.ib(factory=lambda: {'∈': Counter(), '≺': Counter()})
 
     def __call__(self, queries: list[Query]) -> Query:
         summaries = [self.summarize(q) for q in queries]
-        advice = [expert(summary) for expert in EXPERTS]
+        advice = [expert(summaries, self.hist) for expert in EXPERTS]
 
         arm = self.player.send((self.loss, advice))
         query = queries[arm]
@@ -148,6 +165,10 @@ class QuerySelector:
 
     def update(self, response: MemResponse | CmpResponse):
         self.loss = self.loss_map[response]
+        if '∈' in self.loss_map:
+            self.hist['∈'].update(response)
+        else:
+            self.hist['≺'].update(response)
 
     def summarize(self, query: Query) -> ResultMap:
         match query:
