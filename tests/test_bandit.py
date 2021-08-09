@@ -1,6 +1,7 @@
 from scipy.special import softmax
 
 from memreps import memreps
+from memreps import explicit
 
 
 def test_experts():
@@ -35,3 +36,11 @@ def test_experts():
 
     advice = memreps.EXPERTS[1](summaries, hist)
     assert advice == [0, 1]
+
+
+def test_query_selector():
+    gen_concepts = explicit.create_explict_concept_class(
+        universe = {1,2,3},
+        concepts = [set(), {2}, {1}, {1, 2}],
+    )
+    assert len(list(gen_concepts())) == 4
