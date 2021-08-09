@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from functools import partial
 from typing import (Any, Callable, Counter, Generator,
-                    Iterable, Literal, Protocol)
+                    Iterable, Literal, Protocol, Union)
 
 import attr
 import exp4
 import funcy as fn
+import numpy as np
 from exp4.algo import softmax
 
 
@@ -33,13 +34,16 @@ class Concept(Protocol):
 MemQuery = tuple[Literal['∈'], Atom]
 CmpQuery = tuple[Literal['≺'], tuple[Atom, Atom]]
 EqQuery = tuple[Literal['≡'], Concept]
-Query = MemQuery | CmpQuery | EqQuery
+Query = Union[MemQuery, CmpQuery, EqQuery]
 
 # Types of responses from teacher.
 MemResponse = Literal['∈', '∉']
 CmpResponse = Literal['≺', '≻', '=', '||']
-EqResponse = tuple[MemQuery, MemResponse] | tuple[CmpQuery, CmpResponse]
-Response = MemResponse | CmpResponse | EqResponse
+EqResponse = Union[
+    tuple[MemQuery, MemResponse],
+    tuple[CmpQuery, CmpResponse],
+]
+Response = Union[MemResponse, CmpResponse, EqResponse]
 
 LearningAPI = Generator[Query, Response, None]
 
@@ -119,20 +123,22 @@ def create_learner(
 
 
 def worst_case_smax(summaries, _):
-    vals = [min(s.values()) for s in summaries]
-    return softmax(vals)
+    vals = [max(s.values()) for s in summaries]
+    return softmax(1 - np.array(vals))
 
 
 def worst_case_smax_comparable(summaries, _):
     vals = [min(v for k, v in s.items() if k != '||') for s in summaries]
-    return softmax(vals)
+    return softmax(1 - np.array(vals))
 
 
 def historical_smax(summaries, hist):
     vals = []
     for summary in summaries:
         kind = '∈' if '∈' in summary else '≺'
-        val = sum(v * hist[k] for k, v in summary.items())
+        dist = hist[kind]
+        val = sum((1 - v) * dist[k] for k, v in summary.items())
+        val /= sum(dist.values())
         vals.append(val)
     return softmax(vals)
 
@@ -146,8 +152,9 @@ EXPERTS = [
 ]
 
 
-ResultMap = dict[MemResponse | CmpResponse, float]
-Hist = dict[Literal['∈', '≺'], Counter[MemResponse, CmpResponse, float]]
+MemOrCmpResponse = Union[MemResponse, CmpResponse]
+ResultMap = dict[MemOrCmpResponse, float]
+Hist = dict[Literal['∈', '≺'], Counter[MemOrCmpResponse]]
 
 
 @attr.s(auto_detect=True, auto_attribs=True)
@@ -186,20 +193,19 @@ class QuerySelector:
             self.hist['≺'].update(response)
 
     def summarize(self, query: Query) -> ResultMap:
-        match query:
-            case ('∈', atom):
-                tests = {'∈': lambda c: x in c, '∉': lambda c: x not in c}
-
-            case ('≺', (left, right)):
-                tests = {
-                    '≺': lambda c: (left in c) <= (right in c),
-                    '≻': lambda c: (right in c) <= (left in c),
-                    '=': lambda c: (left in c) == (right in c),
-                    '||': lambda c: True,
-                }
-
-            case _:
-                raise NotImplementedError
+        if query[0] == '∈':
+            x = query[1]
+            tests = {'∈': lambda c: x in c, '∉': lambda c: x not in c}
+        elif query[0] == '≺':
+            x, y = query[1]
+            tests = {
+                '≺': lambda c: (left in c) <= (right in c),
+                '≻': lambda c: (right in c) <= (left in c),
+                '=': lambda c: (left in c) == (right in c),
+                '||': lambda c: True,
+            }
+        else:
+            raise NotImplementedError
 
         # Estimate concept class reduction per outcome via naïve monte carlo.
         concepts = fn.take(self.n_trials, gen_concepts())
