@@ -44,3 +44,13 @@ def test_query_selector():
         concepts = [set(), {2}, {1}, {1, 2}],
     )
     assert len(list(gen_concepts())) == 4
+    
+    selector = memreps.QuerySelector(gen_concepts, 10, 1)
+
+    queries = [('∈', 1), ('≺', (1, 2))]
+
+    assert selector.summarize(queries[0]) == {'∈': 1/2, '∉': 1/2}
+    assert selector.summarize(queries[1]) == {
+        '≺': 3/4, '≻': 3/4, '=': 1/2, '||': 1,
+    }
+    

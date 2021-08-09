@@ -197,7 +197,7 @@ class QuerySelector:
             x = query[1]
             tests = {'∈': lambda c: x in c, '∉': lambda c: x not in c}
         elif query[0] == '≺':
-            x, y = query[1]
+            left, right = query[1]
             tests = {
                 '≺': lambda c: (left in c) <= (right in c),
                 '≻': lambda c: (right in c) <= (left in c),
@@ -208,5 +208,5 @@ class QuerySelector:
             raise NotImplementedError
 
         # Estimate concept class reduction per outcome via naïve monte carlo.
-        concepts = fn.take(self.n_trials, gen_concepts())
-        return {k: sum(map(t, concepts)) / len(concepts) for k, t in tests}
+        trials = fn.take(self.n_trials, self.gen_concepts())
+        return {k: sum(map(t, trials)) / len(trials) for k, t in tests.items()}
