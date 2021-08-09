@@ -169,7 +169,9 @@ class QuerySelector:
     player: exp4.Player = attr.ib(factory=exp4.exp4)
     loss: float | None = None
     loss_map: ResultMap = attr.ib(factory=dict)
-    hist: Hist = attr.ib(factory=lambda: {'∈': Counter(), '≺': Counter()})
+    hist: Hist = attr.ib(factory=lambda: {
+        '∈': Counter(['∈', '∉']), '≺': Counter(['≺', '≻', '=', '||'])
+    })
 
     def __call__(self, queries: list[Query]) -> Query:
         summaries = [self.summarize(q) for q in queries]
@@ -181,7 +183,8 @@ class QuerySelector:
         # Setup loss_map.
         query_cost = self.mem_cost if query[0] == '∈' else self.cmp_cost
         query_cost /= max(self.mem_cost, self.cmp_cost)
-        self.loss_map = {k: (query_cost + s) / 2 for k, s in summaries[arm]}
+        summary = summaries[arm]
+        self.loss_map = {k: (query_cost + s) / 2 for k, s in summary.items()}
 
         return query
 

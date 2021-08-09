@@ -54,3 +54,5 @@ def test_query_selector():
         '≺': 3/4, '≻': 3/4, '=': 1/2, '||': 1,
     }
     
+
+    arm = selector(queries)
