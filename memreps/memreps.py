@@ -168,12 +168,14 @@ class QuerySelector:
     # Internal State
     player: exp4.Player = attr.ib(factory=exp4.exp4)
     loss: float | None = None
-    loss_map: ResultMap = attr.ib(factory=dict)
+    loss_map: Optional[ResultMap] = None
     hist: Hist = attr.ib(factory=lambda: {
         '∈': Counter(['∈', '∉']), '≺': Counter(['≺', '≻', '=', '||'])
     })
 
     def __call__(self, queries: list[Query]) -> Query:
+        assert self.loss_map is None, "Must update selector with loss."
+
         summaries = [self.summarize(q) for q in queries]
         advice = [expert(summaries, self.hist) for expert in EXPERTS]
 
@@ -185,15 +187,19 @@ class QuerySelector:
         query_cost /= max(self.mem_cost, self.cmp_cost)
         summary = summaries[arm]
         self.loss_map = {k: (query_cost + s) / 2 for k, s in summary.items()}
+        self.loss = None
 
         return query
 
     def update(self, response: MemResponse | CmpResponse):
-        self.loss = self.loss_map[response]
+        assert self.loss is None, "Must first select a query!."
+
         if '∈' in self.loss_map:
             self.hist['∈'].update(response)
         else:
             self.hist['≺'].update(response)
+
+        self.loss, self.loss_map = self.loss_map[response], None
 
     def summarize(self, query: Query) -> ResultMap:
         if query[0] == '∈':

@@ -54,5 +54,23 @@ def test_query_selector():
         '≺': 3/4, '≻': 3/4, '=': 1/2, '||': 1,
     }
     
+    queries2 = 2 * [('∈', 1)]
+    queries3 = 2 * [('≺', (1, 2))]
+    for _queries in [queries, queries2, queries3]:
+        query = selector(_queries)
+        assert query in _queries
 
-    arm = selector(queries)
+        if query[0] == '∈':
+            assert selector.loss_map == {
+                '∈': (1/2 + 1) / 2,
+                '∉': (1/2 + 1) / 2,
+            }
+            selector.update('∈')
+        else:
+            assert selector.loss_map == {
+                '≺': (3/4 + 1/10)/2,
+                '≻': (3/4 + 1/10)/2,
+                '=': (1/2 + 1/10)/2,
+                '||': (1 + 1/10)/2,
+            }
+            selector.update('≺')
