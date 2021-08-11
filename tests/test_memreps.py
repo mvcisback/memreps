@@ -30,4 +30,3 @@ def test_memreps_smoke():
     kind, payload = query
     assert kind == '≡'
     assert payload.elements == {1, 2}
-    breakpoint()
