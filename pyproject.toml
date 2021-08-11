@@ -16,6 +16,7 @@ funcy = "^1.16"
 mypy = "^0.910"
 pytest-flake8 = "^1.0.7"
 pytest = "^6.2.4"
+dfa-identify = "^1.2.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
