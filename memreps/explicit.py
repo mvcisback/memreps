@@ -18,7 +18,7 @@ class ExplicitConcept:
     def __xor__(self, other: ExplicitConcept) -> ExplicitConcept:
         return attr.evolve(self, elements=self.elements ^ other.elements)
 
-    def __neg__(self) -> ExplicitConcept:
+    def __invert__(self) -> ExplicitConcept:
         return attr.evolve(self, elements=self.elements ^ self.universe)
 
     def __iter__(self) -> Iterable[Atom]:

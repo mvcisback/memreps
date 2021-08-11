@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from functools import partial
 from typing import (Any, Callable, Counter, Generator,
                     Iterable, Literal, Protocol, Union)
@@ -101,19 +102,29 @@ def create_learner(
         if (concept1 := next(concepts, None)) is None:
             return                                         # |Φ| = 0.
 
+        queries = None
         if (concept2 := next(concepts, None)) is None:
             query = ('≡', concept1)                        # |Φ| = 1.
         else:
             concept12 = concept1 ^ concept2
-            atom1, atom2 = next(concept12), next(~concept12)
+            atoms1 = fn.take(1, concept12)
+            atoms2 = fn.take(1, ~concept12)
 
-            queries = [('∈', atom1), ('≺', (atom1, atom2))]
-            query = query_selector(queries)
+            if len(atoms1) == 0:
+                query = ('∈', atoms2[0])
+            elif len(atoms2) == 0:
+                query = ('∈', atoms1[0])
+            else:
+                left, right = atoms1[0], atoms2[0]
+                queries = [('∈', left), ('≺', (left, right))]
+                query = query_selector(queries)
 
         response = yield query
 
-        if query[0] != '≡':  # Equiv responses contain query already.
+        if queries is not None:
             query_selector.update(response)
+        
+        if query[0] != '≡':  # Equiv responses contain query already.
             response = (query, response)
 
         assumptions.append(response)

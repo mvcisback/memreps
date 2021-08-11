@@ -54,9 +54,7 @@ def test_query_selector():
         '≺': 3/4, '≻': 3/4, '=': 1/2, '||': 1,
     }
     
-    queries2 = 2 * [('∈', 1)]
-    queries3 = 2 * [('≺', (1, 2))]
-    for _queries in [queries, queries2, queries3]:
+    for _queries in [queries, queries, queries]:
         query = selector(_queries)
         assert query in _queries
 
