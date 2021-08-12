@@ -10,23 +10,24 @@ def test_memreps_smoke():
 
     learner = memreps.create_learner(
         gen_concepts,
-        membership_cost=10,
+        membership_cost=100,
         compare_cost=1,
     )
  
     query = learner.send(None)
 
-    for _ in range(2):
+    for _ in range(5):
         kind, payload = query
-        assert kind in {'∈', '≺'}
+        assert kind in {'∈', '≺', '≡'}
 
         if kind == '≺':
             assert set(payload) == {1, 2}
             query = learner.send('=')
-        else:
+        elif kind == '∈':
             assert payload in {1, 2}
             query = learner.send('∈')
-
-    kind, payload = query
+        else:
+            break
+       
     assert kind == '≡'
     assert payload.elements == {1, 2}
