@@ -1,57 +1,101 @@
 from __future__ import annotations
 
-from typing import Iterable, Sequence
+from typing import Any, Iterable, Sequence
 
 import attr
+from hasse import PoSet
 
-from memreps.memreps import Atom, Assumption, Assumptions, ConceptClass
+from memreps import Atom, Assumption, Assumptions, Concept, ConceptClass
 
 
-@attr.s(auto_detect=True, auto_attribs=True, frozen=True)
-class ExplicitConcept:
-    universe: frozenset[Atom]
-    elements: frozenset[Atom]
+@attr.frozen
+class LabeledPreSet:
+    poset: Poset
+    labels: dict[Any, bool]
+    equivs: list[set[Any]]
 
-    def __in__(self, atom: Atom) -> bool:
-        return atom in self.elements
+    @property
+    def edges(self) -> Sequence[tuple[Any, Any]]:
+        return list(self.poset.hasse.edges)
 
-    def __xor__(self, other: ExplicitConcept) -> ExplicitConcept:
-        return attr.evolve(self, elements=self.elements ^ other.elements)
+    @property
+    def support(self) -> frozenset[Any]:
+        support = set(self.poset) | set(self.labels)
+        if self.equivs:
+            support |= set.union(*self.equivs)
+        return support
 
-    def __invert__(self) -> ExplicitConcept:
-        return attr.evolve(self, elements=self.elements ^ self.universe)
+    def is_memrep(self, concept: Concept) -> bool:
+        labels = {x: x in concept for x in self.support}
 
-    def __iter__(self) -> Iterable[Atom]:
-        yield from self.elements
+        # Check equivalence classes yield same label under concept.
+        if any(len({labels[x] for x in group}) != 1 for group in self.equivs):
+            return False
 
-    def _satisifies(self, assumption: Assumption) -> bool:
-        query, response = assumption
-        if query[0] == '∈':
-            return (query[1] in self) == ('∈' == response)
-        else:
-            left, right = query[1]
-            left, right = (left in self), (right in self)
+        # Check concept's labels match observed labels.
+        if any(labels[x] != label for x, label in self.labels.items()):
+            return False
 
+        # Check monotonicity of acceptance on chains.
+        return all(labels[x] <= labels[y] for x, y in self.edges)
+
+    @staticmethod
+    def from_assumptions(assumptions: Assumptions):
+        labels, comparisons, equivs = {}, [], set()
+        for query, response in assumptions:
+            if query[0] == '∈':
+                labels[query[1]] = (response == '∈')
+                continue
+            elif response == '||':
+                continue
+
+            left, right = query
+            
             if response == '≺':
-                return left <= right
+                comparisons.append((left, right))
             elif response == '≻':
-                return right <= left
-            elif response == '=':
-                return left == right
-            return True
+                comparisons.append((right, left))
+            else:
+                assert response == '='
+                new_group = {left, right}
+                for group in equivs:
+                    if group & new_group: 
+                        group |= {left, right}  # Add to existing group.
+                        continue
+                equivs.append(new_group)
 
-    def satisifies(self, assumptions: Assumptions) -> bool:
-        return all(map(self._satisifies, assumptions))
-
+        return LabeledPreSet(
+            labels=labels,
+            equivs=equivs,
+            poset=PoSet.from_chains(comparisons),
+        )
 
 def create_explict_concept_class(
     universe: Sequence[Atom],
     concepts: Sequence[frozenset[Atom]]) -> ConceptClass:
 
     universe = frozenset(universe)
-    concepts = [ExplicitConcept(universe, c) for c in concepts]
+
+    @attr.frozen
+    class ExplicitConcept:
+        elements: frozenset[Atom]
+
+        def __in__(self, atom: Atom) -> bool:
+            return atom in self.elements
+
+        def __xor__(self, other: ExplicitConcept) -> ExplicitConcept:
+            return attr.evolve(self, elements=self.elements ^ other.elements)
+
+        def __invert__(self) -> ExplicitConcept:
+            return attr.evolve(self, elements=self.elements ^ universe)
+
+        def __iter__(self) -> Iterable[Atom]:
+            yield from self.elements
+
+    concepts = [ExplicitConcept(c) for c in concepts]
 
     def concept_class(assumptions=()):
-        yield from (c for c in concepts if c.satisifies(assumptions))
+        lposet = LabeledPreSet.from_assumptions(assumptions)
+        yield from (c for c in concepts if lposet.is_memrep(c))
 
     return concept_class

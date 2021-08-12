@@ -179,6 +179,7 @@ class QuerySelector:
     gen_concepts: ConceptClass
     mem_cost: float
     cmp_cost: float
+
     n_trials: int = 10  # Used for monte carlo summarization.
 
     # Internal State
