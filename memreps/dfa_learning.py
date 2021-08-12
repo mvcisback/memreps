@@ -1,11 +1,28 @@
 from itertools import groupby
 import attr
-from typing import Any, Optional, Tuple, Callable, List, Dict
+from typing import Any, Optional, Tuple, Callable, List, Dict, Iterable
 from dfa import DFA
 from dfa.utils import find_equiv_counterexample, find_subset_counterexample, find_word
-from memreps.memreps import create_learner, MemQuery, CmpQuery, EqQuery, Atom, Assumptions, Response, Query
+from memreps.memreps import create_learner, MemQuery, CmpQuery, EqQuery
+from memreps.memreps import Atom, Assumptions, Response, Query, Concept, Literal
 
 from dfa_identify.identify import find_dfa, find_dfas
+
+class DFAConcept(Concept):
+    def __init__(self, dfa: DFA):
+        self.dfa = dfa
+
+    def __in__(self, atom: Atom) -> bool:
+        return self.dfa.label(atom)
+
+    def __xor__(self, other: Concept) -> Concept:
+        return (self.dfa ^ other)
+
+    def __neg__(self) -> Concept:
+        return ~self.dfa
+
+    def __iter__(self) -> Iterable[Atom]:
+        yield find_word(self.dfa)
 
 
 def dfa_memreps(
@@ -32,7 +49,8 @@ def dfa_memreps(
         tmp_incomparable_preference_words = incomparable_preference_words[:]
 
         for query, response in assumptions:
-            if isinstance(query, MemQuery):
+            query_symbol, query_atom = query
+            if query_symbol == '∈':
                 query_id, word = query
                 if response == '∈':  # accepting case
                     tmp_accepting.append(word)
@@ -49,14 +67,15 @@ def dfa_memreps(
                 elif response == '||':
                     if strong_memrep:
                         tmp_incomparable_preference_words.append(word_pair)
-        return find_dfas(tmp_accepting, tmp_rejecting, tmp_ordered_preference_words,
+        gnr = find_dfas(tmp_accepting, tmp_rejecting, tmp_ordered_preference_words,
                          tmp_incomparable_preference_words)
+        yield DFAConcept(next(gnr))
     #  create initial learner and generate initial query
     dfa_learner = create_learner(concept_class_wrapper, membership_cost, compare_cost)
     query = dfa_learner.send(None)
     for _ in range(max_num_iters):
         # get a response from the oracle
-        response = oracle.send(query)
+        response = oracle(query)
         if isinstance(query, EqQuery):
             query_type, concept = query
             if response is None:
