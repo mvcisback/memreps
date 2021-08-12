@@ -52,6 +52,14 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
+name = "decorator"
+version = "4.4.2"
+description = "Decorators for Humans"
+category = "dev"
+optional = false
+python-versions = ">=2.6, !=3.0.*, !=3.1.*"
+
+[[package]]
 name = "dfa"
 version = "2.2.1"
 description = "Python library for modeling DFAs, Moore Machines, and Transition Systems."
@@ -82,14 +90,14 @@ attrs = "^21.0.0"
 bidict = "^0.21.2"
 dfa = "^2.2.1"
 funcy = "^1.15"
-networkx = "^2.5.1"
+networkx = "2.5.1"
 python-sat = "^0.1.7-alpha.2"
 
 [package.source]
 type = "git"
-url = "https://github.com/mvcisback/dfa-identify.git"
+url = "https://github.com/mvcisback/dfa-identify"
 reference = "preferences"
-resolved_reference = "f41244c61a421cb0a5246063635b2f5b6b6a2a24"
+resolved_reference = "955dae84ebd37b54fd2ecd97be937f54a536e048"
 
 [[package]]
 name = "execnet"
@@ -104,7 +112,7 @@ testing = ["pre-commit"]
 
 [[package]]
 name = "exp4"
-version = "0.1.3"
+version = "0.1.4"
 description = "Implementation of Exponential weighting for Exploration and Exploitation with Experts."
 category = "main"
 optional = false
@@ -190,18 +198,27 @@ python-versions = "*"
 
 [[package]]
 name = "networkx"
-version = "2.6.2"
+version = "2.5.1"
 description = "Python package for creating and manipulating graphs and networks"
 category = "dev"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.6"
+
+[package.dependencies]
+decorator = ">=4.3,<5"
 
 [package.extras]
-default = ["numpy (>=1.19)", "scipy (>=1.5,!=1.6.1)", "matplotlib (>=3.3)", "pandas (>=1.1)"]
-developer = ["black (==21.5b1)", "pre-commit (>=2.12)"]
-doc = ["sphinx (>=4.0,<5.0)", "pydata-sphinx-theme (>=0.6,<1.0)", "sphinx-gallery (>=0.9,<1.0)", "numpydoc (>=1.1)", "pillow (>=8.2)", "nb2plots (>=0.6)", "texext (>=0.6.6)"]
-extra = ["lxml (>=4.5)", "pygraphviz (>=1.7)", "pydot (>=1.4.1)"]
-test = ["pytest (>=6.2)", "pytest-cov (>=2.12)", "codecov (>=2.1)"]
+all = ["numpy", "scipy", "pandas", "matplotlib", "pygraphviz", "pydot", "pyyaml", "lxml", "pytest"]
+gdal = ["gdal"]
+lxml = ["lxml"]
+matplotlib = ["matplotlib"]
+numpy = ["numpy"]
+pandas = ["pandas"]
+pydot = ["pydot"]
+pygraphviz = ["pygraphviz"]
+pytest = ["pytest"]
+pyyaml = ["pyyaml"]
+scipy = ["scipy"]
 
 [[package]]
 name = "numpy"
@@ -380,7 +397,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "6495a3d6c548f280668b53781123e38f9b12f494cd6217b57c72d49fb6593978"
+content-hash = "60c4e36aeed97900b3256dc0093f3445f929d1119463d52ecbb0c918aea96c66"
 
 [metadata.files]
 atomicwrites = [
@@ -403,6 +420,10 @@ colorama = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
 ]
+decorator = [
+    {file = "decorator-4.4.2-py2.py3-none-any.whl", hash = "sha256:41fa54c2a0cc4ba648be4fd43cff00aedf5b9465c9bf18d64325bc225f08f760"},
+    {file = "decorator-4.4.2.tar.gz", hash = "sha256:e3a62f0520172440ca0dcc823749319382e377f37f140a0b99ef45fecb84bfe7"},
+]
 dfa = [
     {file = "dfa-2.2.1-py3-none-any.whl", hash = "sha256:ddfc16e00d748f411f3faae590d5ef7e1b7fd30689af0755776dcb49f0529465"},
     {file = "dfa-2.2.1.tar.gz", hash = "sha256:ed29164d83f4d576937ab995f03622964669c3842cb34b31d9877d76e7d0b272"},
@@ -413,8 +434,8 @@ execnet = [
     {file = "execnet-1.9.0.tar.gz", hash = "sha256:8f694f3ba9cc92cab508b152dcfe322153975c29bda272e2fd7f3f00f36e47c5"},
 ]
 exp4 = [
-    {file = "exp4-0.1.3-py3-none-any.whl", hash = "sha256:f816b425199b34d220a5fd2ca5face2350bb391fa88268d1073cd1372b3e5957"},
-    {file = "exp4-0.1.3.tar.gz", hash = "sha256:9f551f6e3abe8adc704428ae068118b93992a1de959e5cae1c05e84df6a1f118"},
+    {file = "exp4-0.1.4-py3-none-any.whl", hash = "sha256:ef11848f628e6c2b7b612680bc3cfee86556a726a52d75bbc751047cf55783c1"},
+    {file = "exp4-0.1.4.tar.gz", hash = "sha256:2c8e4f72d30cc6ef0324eb1c1d49963b20cb0523a1b17b60f49f1b23281ae480"},
 ]
 flake8 = [
     {file = "flake8-3.9.2-py2.py3-none-any.whl", hash = "sha256:bf8fd333346d844f616e8d47905ef3a3384edae6b4e9beb0c5101e25e3110907"},
@@ -466,8 +487,8 @@ mypy-extensions = [
     {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
 ]
 networkx = [
-    {file = "networkx-2.6.2-py3-none-any.whl", hash = "sha256:5fcb7004be69e8fbdf07dcb502efa5c77cadcaad6982164134eeb9721f826c2e"},
-    {file = "networkx-2.6.2.tar.gz", hash = "sha256:2306f1950ce772c5a59a57f5486d59bb9cab98497c45fc49cbc45ac0dec119bb"},
+    {file = "networkx-2.5.1-py3-none-any.whl", hash = "sha256:0635858ed7e989f4c574c2328380b452df892ae85084144c73d8cd819f0c4e06"},
+    {file = "networkx-2.5.1.tar.gz", hash = "sha256:109cd585cac41297f71103c3c42ac6ef7379f29788eb54cb751be5a663bb235a"},
 ]
 numpy = [
     {file = "numpy-1.21.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:38e8648f9449a549a7dfe8d8755a5979b45b3538520d1e735637ef28e8c2dc50"},

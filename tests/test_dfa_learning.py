@@ -9,13 +9,13 @@ def test_equivalence_memreps():
         query_symbol, query = full_query
         if query_symbol == '∈':
             # mem query case
-            return membership_fxn(query)
+            return query, membership_fxn(query)
         elif query_symbol == '≺':
             # cmp query case
-            return pref_fxn(query[0], query[1])
+            return query, pref_fxn(query[0], query[1])
         else:
             # eq query case
-            return equivalence_fxn(query)
+            return query, equivalence_fxn(query)
 
     transition_dict = {0: (True, {'a': 1, 'b': 0}),
                        1: (True, {'a' : 4, 'b': 2}),
@@ -46,12 +46,12 @@ def test_equivalence_memreps():
             return None
         else:
             if true_dfa.label(cex):
-                return ('∈', cex)
+                return '∈'
             else:
-                return ('∉', cex)
+                return '∉'
 
     accepting = ['b', 'aa', 'a']
     rejecting = ['aaaaa', 'abb']
 
-    resulting_dfa = dfa_memreps(accepting, rejecting, oracle, 10,1)
+    resulting_dfa = dfa_memreps(accepting, rejecting, oracle, 2, 1)
     assert find_equiv_counterexample(true_dfa, resulting_dfa) is None

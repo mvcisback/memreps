@@ -31,7 +31,7 @@ def dfa_memreps(
         oracle: Callable[[Query], Response],
         membership_cost: float,
         compare_cost: float,
-        max_num_iters: int = 100,
+        query_limit: int = 50,
         strong_memrep: bool = False,
         ordered_preference_words: list[Tuple[Atom, Atom]] = None,
         incomparable_preference_words: list[Tuple[Atom, Atom]] = None
@@ -73,12 +73,14 @@ def dfa_memreps(
     #  create initial learner and generate initial query
     dfa_learner = create_learner(concept_class_wrapper, membership_cost, compare_cost)
     query = dfa_learner.send(None)
-    for _ in range(max_num_iters):
+    for _ in range(query_limit):
         # get a response from the oracle
         response = oracle(query)
-        if isinstance(query, EqQuery):
-            query_type, concept = query
+        query_type, concept = query
+        if query_type == '≡':
+            # we are in an equivalence query. return if we are indeed equivalent
             if response is None:
                 return concept
         query = dfa_learner.send(response)
-    return None
+    query_type, concept = query
+    return concept

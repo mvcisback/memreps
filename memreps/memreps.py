@@ -61,7 +61,8 @@ ConceptClass = Callable[[Assumptions], Iterable[Concept]]
 def create_learner(
         gen_concepts: ConceptClass,
         membership_cost: float,
-        compare_cost: float) -> LearningAPI:
+        compare_cost: float,
+        query_limit: int = 50) -> LearningAPI:
     """Create learner for interactiving learning a concept φ*.
 
     Assumes that atoms form a membership respecting pre-order, i.e.,
@@ -103,6 +104,10 @@ def create_learner(
             return                                         # |Φ| = 0.
 
         queries = None
+        if len(assumptions) > query_limit:  # max num. of queries reached
+            yield next(concepts, None)
+            return
+
         if (concept2 := next(concepts, None)) is None:
             query = ('≡', concept1)                        # |Φ| = 1.
         else:
