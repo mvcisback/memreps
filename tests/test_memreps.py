@@ -16,7 +16,7 @@ def test_memreps_smoke():
  
     query = learner.send(None)
 
-    for _ in range(5):
+    for _ in range(1000):
         kind, payload = query
         assert kind in {'∈', '≺', '≡'}
 
