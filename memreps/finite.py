@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Iterable, Sequence
 
 import attr
+import networkx as nx
 from hasse import PoSet
 
 from memreps import Atom, Assumptions, Concept, ConceptClass
@@ -52,7 +53,7 @@ class LabeledPreSet:
             elif response == '||':
                 continue
 
-            left, right = query
+            left, right = query[1]
             
             if response == '≺':
                 comparisons.append((left, right))
@@ -66,11 +67,10 @@ class LabeledPreSet:
                         group |= {left, right}  # Add to existing group.
                         continue
                 equivs.append(new_group)
-
         return LabeledPreSet(
             labels=labels,
             equivs=equivs,
-            poset=PoSet.from_chains(comparisons),
+            poset=PoSet.from_chains(*comparisons),
         )
 
 
@@ -78,7 +78,10 @@ def create_finite_concept_class(concepts: Iterable[Concept]) -> ConceptClass:
     concepts = list(concepts)
 
     def concept_class(assumptions=()):
-        lposet = LabeledPreSet.from_assumptions(assumptions)
+        try:
+            lposet = LabeledPreSet.from_assumptions(assumptions)
+        except nx.NetworkXError:
+            return
         yield from (c for c in concepts if lposet.is_memrep(c))
 
     return concept_class

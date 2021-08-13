@@ -105,7 +105,7 @@ def create_learner(
 
         queries = None
         if len(assumptions) > query_limit:  # max num. of queries reached
-            yield next(concepts, None)
+            yield '≡', next(concepts, None)
             return
 
         if (concept2 := next(concepts, None)) is None:

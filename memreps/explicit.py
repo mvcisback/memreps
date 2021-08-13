@@ -17,7 +17,7 @@ def create_explict_concept_class(
 
     @attr.frozen
     class ExplicitConcept:
-        elements: frozenset[Atom]
+        elements: frozenset[Atom] = attr.ib(converter=frozenset)
 
         def __in__(self, atom: Atom) -> bool:
             return atom in self.elements

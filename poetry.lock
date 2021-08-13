@@ -137,7 +137,7 @@ python-versions = "*"
 
 [[package]]
 name = "hasse"
-version = "0.1.1"
+version = "0.1.2"
 description = "Python library for representing Partially Ordered sets via Hasse Diagrams."
 category = "main"
 optional = false
@@ -392,7 +392,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "2751a17830d8662be7e4c93dfb87fdf16286f2c1694b7f2b9446e8cb10f1053a"
+content-hash = "4fb704922ee80ee47de14de3de3007666a6c188b34b626096aef7fd6aea0a171"
 
 [metadata.files]
 atomicwrites = [
@@ -437,8 +437,8 @@ funcy = [
     {file = "funcy-1.16.tar.gz", hash = "sha256:2775409b7dc9106283f1224d97e6df5f2c02e7291c8caed72764f5a115dffb50"},
 ]
 hasse = [
-    {file = "hasse-0.1.1-py3-none-any.whl", hash = "sha256:54a7f24126d5c488bf12af90932533bc6c5cc8fedb596a450a3a9c679ac9c3fb"},
-    {file = "hasse-0.1.1.tar.gz", hash = "sha256:f98cc6e7b71bb77ac122cab2363202b95d79fbe2942965c0d00bbffc7de9dc10"},
+    {file = "hasse-0.1.2-py3-none-any.whl", hash = "sha256:ad4f779335dfa6dc1e672c41a7182b0274745c3d1f9c0d9bc0498e661ee05b37"},
+    {file = "hasse-0.1.2.tar.gz", hash = "sha256:34f8d6b8f5a4bdcd0228d6da43197871f9d82ab551e50c9827d80e189029bd1f"},
 ]
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
