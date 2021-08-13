@@ -21,7 +21,7 @@ def create_explicit_concept_class(
     class ExplicitConcept:
         elements: frozenset[Atom] = attr.ib(converter=frozenset)
 
-        def __in__(self, atom: Atom) -> bool:
+        def __contains__(self, atom: Atom) -> bool:
             return atom in self.elements
 
         def __xor__(self, other: ExplicitConcept) -> ExplicitConcept:

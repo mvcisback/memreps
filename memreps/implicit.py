@@ -23,8 +23,8 @@ def create_implicit_concept_class(
     class ImplicitConcept:
         pred: Predicate
 
-        def __in__(self, atom: Atom) -> bool:
-            return Predicate(atom) 
+        def __contains__(self, atom: Atom) -> bool:
+            return self.pred(atom) 
 
         def __xor__(self, other: ImplicitConcept) -> ImplicitConcept:
             def pred(x):
@@ -36,6 +36,6 @@ def create_implicit_concept_class(
             return attr.evolve(self, pred=lambda x: not self.pred(x))
 
         def __iter__(self) -> Iterable[Atom]:
-            yield from elems(self.pred)
+            yield from filter(self.pred, elems(self.pred))
 
     return create_finite_concept_class(ImplicitConcept(c) for c in concepts)
