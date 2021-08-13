@@ -29,3 +29,12 @@ def test_simple_grid_concept_class():
     concept = next(gen_concepts())
 
     assert (1, 1) in concept
+    params = np.array(concept.pred.params)
+    assert params in concept
+    assert params - 0.1 not in concept
+    assert params + 0.1 in concept 
+
+    left, right = (0, 0), (0.6, 0.6)
+    assumptions = [(('≺', (left, right)), '≻')]
+
+    assert set(gen_concepts(assumptions)) < set(gen_concepts())
