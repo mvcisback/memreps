@@ -14,7 +14,7 @@ __all__ = ['LabeledPreSet', 'create_finite_concept_class']
 
 @attr.frozen
 class LabeledPreSet:
-    poset: Poset
+    poset: PoSet
     labels: dict[Any, bool]
     equivs: list[set[Any]]
 
@@ -76,6 +76,7 @@ class LabeledPreSet:
 
 def create_finite_concept_class(concepts: Iterable[Concept]) -> ConceptClass:
     concepts = list(concepts)
+    # TODO: shuffle.
 
     def concept_class(assumptions=()):
         try:

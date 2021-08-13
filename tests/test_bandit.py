@@ -39,7 +39,7 @@ def test_experts():
 
 
 def test_query_selector():
-    gen_concepts = explicit.create_explict_concept_class(
+    gen_concepts = explicit.create_explicit_concept_class(
         universe = {1,2,3},
         concepts = [set(), {2}, {1}, {1, 2}],
     )

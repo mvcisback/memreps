@@ -4,12 +4,14 @@ from typing import Any, Iterable
 
 import attr
 
-from memreps import Atom,  ConceptClass
+from memreps import Atom, ConceptClass
 from memreps.finite import create_finite_concept_class
 
 
+__all__ = ['create_explicit_concept_class']
 
-def create_explict_concept_class(
+
+def create_explicit_concept_class(
     universe: Iterable[Atom],
     concepts: Iterable[frozenset[Atom]]) -> ConceptClass:
 

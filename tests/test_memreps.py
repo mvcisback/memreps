@@ -3,7 +3,7 @@ from memreps import explicit
 
 
 def test_memreps_smoke():
-    gen_concepts = explicit.create_explict_concept_class(
+    gen_concepts = explicit.create_explicit_concept_class(
         universe = {1, 2},
         concepts = [{2}, {1}, {1, 2}],
     )
