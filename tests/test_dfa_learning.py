@@ -15,7 +15,12 @@ def test_equivalence_memreps():
             return query, pref_fxn(query[0], query[1])
         else:
             # eq query case
-            return query, equivalence_fxn(query)
+            resp = equivalence_fxn(query.dfa)
+            if resp is None:
+                return None
+            else:
+                counterex, label = resp
+                return ('∈', counterex), label
 
     transition_dict = {0: (True, {'a': 1, 'b': 0}),
                        1: (True, {'a' : 4, 'b': 2}),
@@ -46,12 +51,12 @@ def test_equivalence_memreps():
             return None
         else:
             if true_dfa.label(cex):
-                return '∈'
+                return cex, '∈'
             else:
-                return '∉'
+                return cex, '∉'
 
     accepting = ['b', 'aa', 'a']
     rejecting = ['aaaaa', 'abb']
 
     resulting_dfa = dfa_memreps(accepting, rejecting, oracle, 2, 1)
-    assert find_equiv_counterexample(true_dfa, resulting_dfa) is None
+    assert find_equiv_counterexample(true_dfa, resulting_dfa.dfa) is None

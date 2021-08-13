@@ -16,7 +16,7 @@ class DFAConcept(Concept):
         return self.dfa.label(atom)
 
     def __xor__(self, other: Concept) -> Concept:
-        return (self.dfa ^ other)
+        return (self.dfa ^ other.dfa)
 
     def __neg__(self) -> Concept:
         return ~self.dfa
