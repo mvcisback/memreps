@@ -15,11 +15,11 @@ class DFAConcept(Concept):
     def __in__(self, atom: Atom) -> bool:
         return self.dfa.label(atom)
 
-    def __xor__(self, other: Concept) -> Concept:
-        return (self.dfa ^ other.dfa)
+    def __xor__(self, other) -> Concept:
+        return DFAConcept(self.dfa ^ other.dfa)
 
-    def __neg__(self) -> Concept:
-        return ~self.dfa
+    def __invert__(self) -> Concept:
+        return DFAConcept(~self.dfa)
 
     def __iter__(self) -> Iterable[Atom]:
         yield find_word(self.dfa)
@@ -69,11 +69,15 @@ def dfa_memreps(
                         tmp_incomparable_preference_words.append(word_pair)
         gnr = find_dfas(tmp_accepting, tmp_rejecting, tmp_ordered_preference_words,
                          tmp_incomparable_preference_words)
-        yield DFAConcept(next(gnr))
+        dfa_concepts = []
+        for dfaobj in list(gnr):
+            dfa_concepts.append(DFAConcept(dfaobj))
+        return iter(dfa_concepts)
+
     #  create initial learner and generate initial query
     dfa_learner = create_learner(concept_class_wrapper, membership_cost, compare_cost)
     query = dfa_learner.send(None)
-    for _ in range(query_limit):
+    for itr in range(query_limit):
         # get a response from the oracle
         response = oracle(query)
         query_type, concept = query
@@ -82,5 +86,6 @@ def dfa_memreps(
             if response is None:
                 return concept
         query = dfa_learner.send(response)
+        print("On iteration: ", itr)
     query_type, concept = query
     return concept
