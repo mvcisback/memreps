@@ -69,10 +69,7 @@ def dfa_memreps(
                         tmp_incomparable_preference_words.append(word_pair)
         gnr = find_dfas(tmp_accepting, tmp_rejecting, tmp_ordered_preference_words,
                          tmp_incomparable_preference_words)
-        dfa_concepts = []
-        for dfaobj in list(gnr):
-            dfa_concepts.append(DFAConcept(dfaobj))
-        return iter(dfa_concepts)
+        return map(DFAConcept, gnr)
 
     #  create initial learner and generate initial query
     dfa_learner = create_learner(concept_class_wrapper, membership_cost, compare_cost)
@@ -87,5 +84,6 @@ def dfa_memreps(
                 return concept
         query = dfa_learner.send(response)
         print("On iteration: ", itr)
+        print(query)
     query_type, concept = query
     return concept
