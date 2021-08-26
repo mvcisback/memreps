@@ -1,6 +1,9 @@
+import random
 from itertools import groupby
-import attr
 from typing import Any, Optional, Tuple, Callable, List, Dict, Iterable
+
+import attr
+import funcy as fn
 from dfa import DFA
 from dfa.utils import find_equiv_counterexample, find_subset_counterexample, find_word
 from memreps.memreps import create_learner, MemQuery, CmpQuery, EqQuery
@@ -8,11 +11,12 @@ from memreps.memreps import Atom, Assumptions, Response, Query, Concept, Literal
 
 from dfa_identify.identify import find_dfa, find_dfas
 
-class DFAConcept(Concept):
-    def __init__(self, dfa: DFA):
-        self.dfa = dfa
 
-    def __in__(self, atom: Atom) -> bool:
+@attr.frozen
+class DFAConcept:
+    dfa: DFA
+
+    def __contains__(self, atom: Atom) -> bool:
         return self.dfa.label(atom)
 
     def __xor__(self, other) -> Concept:
@@ -25,24 +29,24 @@ class DFAConcept(Concept):
         yield find_word(self.dfa)
 
 
-def dfa_memreps(
-        accepting: List[Atom],
-        rejecting: List[Atom],
-        oracle: Callable[[Query], Response],
-        membership_cost: float,
-        compare_cost: float,
-        query_limit: int = 50,
-        strong_memrep: bool = False,
-        ordered_preference_words: list[Tuple[Atom, Atom]] = None,
-        incomparable_preference_words: list[Tuple[Atom, Atom]] = None
+# create wrapper for DFA concept class
+def create_dfa_concept_class(
+    strong_memrep: bool = False,
+    accepting: Optional[list[Atom]] = None,
+    rejecting: Optional[list[Atom]] = None,
+    ordered_preference_words: Optional[list[Tuple[Atom, Atom]]] = None,
+    incomparable_preference_words: Optional[list[Tuple[Atom, Atom]]] = None
 ):
+    if accepting is None:
+       accepting = []
+    if rejecting is None:
+        rejecting = []
     if ordered_preference_words is None:
         ordered_preference_words = []
     if incomparable_preference_words is None:
         incomparable_preference_words = []
 
-    # create wrapper for DFA concept class
-    def concept_class_wrapper(assumptions: Assumptions):
+    def concept_class(assumptions):
         tmp_accepting = accepting[:]
         tmp_rejecting = rejecting[:]
         tmp_ordered_preference_words = ordered_preference_words[:]
@@ -69,10 +73,38 @@ def dfa_memreps(
                         tmp_incomparable_preference_words.append(word_pair)
         gnr = find_dfas(tmp_accepting, tmp_rejecting, tmp_ordered_preference_words,
                          tmp_incomparable_preference_words)
-        return map(DFAConcept, gnr)
+        gnr = map(DFAConcept, gnr)
 
-    #  create initial learner and generate initial query
-    dfa_learner = create_learner(concept_class_wrapper, membership_cost, compare_cost)
+        for batch in fn.chunks(20, gnr):
+           random.shuffle(batch)
+           yield from batch
+
+    return concept_class
+
+
+
+
+def dfa_memreps(
+    oracle: Callable[[Query], Response],
+    membership_cost: float,
+    compare_cost: float,
+    query_limit: int = 50,
+    strong_memrep: bool = False,
+    accepting: Optional[list[Atom]] = None,
+    rejecting: Optional[list[Atom]] = None,
+    ordered_preference_words: Optional[list[Tuple[Atom, Atom]]] = None,
+    incomparable_preference_words: Optional[list[Tuple[Atom, Atom]]] = None
+):
+    concept_class = create_dfa_concept_class(
+        strong_memrep=strong_memrep,
+        accepting=accepting,
+        rejecting=rejecting,
+        ordered_preference_words=ordered_preference_words,
+        incomparable_preference_words=incomparable_preference_words,
+    )
+
+     #  create initial learner and generate initial query
+    dfa_learner = create_learner(concept_class, membership_cost, compare_cost, query_limit=query_limit)
     query = dfa_learner.send(None)
     for itr in range(query_limit):
         # get a response from the oracle

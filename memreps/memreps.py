@@ -16,7 +16,7 @@ Atom = Any
 
 
 class Concept(Protocol):
-    def __in__(self, atom: Atom) -> bool:
+    def __contains__(self, atom: Atom) -> bool:
         ...
 
     def __xor__(self, other: Concept) -> Concept:
@@ -144,7 +144,7 @@ def worst_case_smax(summaries, _):
 
 
 def worst_case_smax_comparable(summaries, _):
-    vals = [min(v for k, v in s.items() if k != '||') for s in summaries]
+    vals = [max(v for k, v in s.items() if k != '||') for s in summaries]
     return softmax(1 - np.array(vals))
 
 

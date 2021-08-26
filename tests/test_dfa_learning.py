@@ -1,7 +1,7 @@
 from dfa_identify import find_dfa, find_dfas
 from dfa.utils import find_equiv_counterexample, find_subset_counterexample
 from dfa import dict2dfa
-from memreps.dfa_learning import dfa_memreps
+from memreps.dfa_learning import dfa_memreps, create_dfa_concept_class
 import numpy as np
 
 def test_equivalence_memreps():
@@ -58,7 +58,7 @@ def test_equivalence_memreps():
     accepting = ['b', 'aa', 'a']
     rejecting = ['aaaaa', 'abb']
 
-    resulting_dfa = dfa_memreps(accepting, rejecting, oracle, 2, 1)
+    resulting_dfa = dfa_memreps(oracle, 2, 1, accepting=accepting, rejecting=rejecting)
     assert find_equiv_counterexample(true_dfa, resulting_dfa.dfa) is None
 
 
@@ -117,5 +117,5 @@ def test_gridworld_dfa():
     accepting = ['WBOOYY', 'WBWBWOWOWY']
     rejecting = ['R', 'WYBY']
 
-    resulting_dfa = dfa_memreps(accepting, rejecting, oracle, 2, 1, query_limit=150)
+    resulting_dfa = dfa_memreps(oracle, 2, 1, query_limit=150, accepting=accepting, rejecting=rejecting)
     assert find_equiv_counterexample(true_dfa, resulting_dfa.dfa) is None
