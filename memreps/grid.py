@@ -112,3 +112,17 @@ def hyperplane_mem(concept: np.ndarray, plane: np.ndarray) -> bool:
     Here we assume that membership holds if point is below the plane (ie higher values of parameter result in stricter predicate)
     """
     return (concept[0] - h(concept[1:], plane) < -eta)
+
+def hyperplane_comp(concept: np.ndarray, plane1: np.ndarray, plane2: np.ndarray) -> int:
+    """
+    Performs comparison testing of 2 atoms w.r.t specified concept
+    Here we assume that membership holds if point is below the plane (ie higher values of parameter result in stricter predicate)
+    This algo is quite naive, might possibly want to change it to use orthogonal projection?
+    1:  plane1 > plane2
+    -1: plane1 < plane2 
+    """
+    delta = h(concept[1:], plane1) - h(concept[1:], plane2)
+    if abs(delta) < eta:
+        return 0
+    else:
+        return int(np.sign(delta))
