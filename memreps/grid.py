@@ -34,7 +34,6 @@ def create_grid_concept_class(
     return create_implicit_concept_class(elems, concepts)
 
 def sep_hyperplane(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
-
     """
     Given 2 points, p1 and p2, generate a separating hyperplane for the two
     To extract p1 and p2, we have to go into Concept, extract Predicate, and look at Parameters 
@@ -68,3 +67,37 @@ def sep_hyperplane(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
     delta2 = p2[0] - h2
     A[-1] = np.random.default_rng().uniform(min(delta1, delta2), max(delta1, delta2))
     return A
+
+def nonsep_hyperplane(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
+    """
+    Given 2 points, p1 and p2, generate a non-separating hyperplane for the two
+    To extract p1 and p2, we have to go into Concept, extract Predicate, and look at Parameters 
+    This basically finds atoms that are not in symmetrix difference of 2 concepts
+
+    Hyperplane is represented as: x_0 = a_1*x_1 + a_2*x_2 + ... + a_n, where a_i are float parameters
+    Constraints:
+        - all gradients (ie parameters other than a_n) must be negative
+        - hyperplane must be separating
+
+    output:
+    ndarray containing a_1, a_2, ...
+    """
+    limit = 10.0
+    eta = 1e-12
+    dim = p1.shape[0]
+    
+    A = np.zeros((dim))
+    A[:-1] = -np.random.default_rng().uniform(0, limit, size = (dim-1))
+    h1 = np.dot(p1[1:], A[:-1])
+    h2 = np.dot(p2[1:], A[:-1])
+
+    delta1 = p1[0] - h1
+    delta2 = p2[0] - h2
+    lower = min(delta1, delta2)
+    upper = max(delta1, delta2)
+    if np.random.default_rng().integers(2):
+        A[-1] = np.random.default_rng().uniform(0, lower - eta)
+    else:
+        A[-1] = np.random.default_rng().uniform(upper + eta, 1 - np.sum(A[:-1]))
+    return A
+    
