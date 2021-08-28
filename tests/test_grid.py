@@ -40,6 +40,9 @@ def test_simple_grid_concept_class():
 
     assert set(gen_concepts(assumptions)) < set(gen_concepts())
 
+def h(x, p):
+    return np.dot(x, p[:-1]) + p[-1]
+
 def test_sep_hyperplane():
     # 3D testing
     dim = 3
@@ -48,9 +51,6 @@ def test_sep_hyperplane():
         p2 = np.random.default_rng().uniform(0, 1, size = (dim))
         plane = grid.sep_hyperplane(p1, p2)
 
-        def h(x, p):
-            return np.dot(x, p[:-1]) + p[-1]
-
         # print(p1, p2, plane)
         # checks whether hyperplane is really separating
         h1 = h(p1[1:], plane) - p1[0]
@@ -58,6 +58,7 @@ def test_sep_hyperplane():
         # h1 = np.dot(p1[1:], plane[:-1]) + plane[-1] - p1[0]
         # h2 = np.dot(p2[1:], plane[:-1]) + plane[-1] - p2[0]
         assert h1 * h2 < 0
+        assert grid.hyperplane_mem(p1, plane) != grid.hyperplane_mem(p2, plane)
 
     print(p1, p2, plane)
     print(h1, h2)
@@ -85,9 +86,6 @@ def test_nonsep_hyperplane():
         p2 = np.random.default_rng().uniform(0, 1, size = (dim))
         plane = grid.nonsep_hyperplane(p1, p2)
 
-        def h(x, p):
-            return np.dot(x, p[:-1]) + p[-1]
-
         # print(p1, p2, plane)
         # checks whether hyperplane is really separating
         h1 = h(p1[1:], plane) - p1[0]
@@ -95,6 +93,7 @@ def test_nonsep_hyperplane():
         # h1 = np.dot(p1[1:], plane[:-1]) + plane[-1] - p1[0]
         # h2 = np.dot(p2[1:], plane[:-1]) + plane[-1] - p2[0]
         assert h1 * h2 > 0
+        assert grid.hyperplane_mem(p1, plane) == grid.hyperplane_mem(p2, plane)
 
     print(p1, p2, plane)
     print(h1, h2)

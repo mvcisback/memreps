@@ -13,7 +13,7 @@ from memreps.implicit import create_implicit_concept_class, Predicate
 
 Parameters = Sequence[float]  # Should be between 0 and 1.
 ParameterizedPredicate = Callable[[Parameters], Predicate]
-
+eta = 1e-12
 
 def create_grid_concept_class(
     family: ParameterizedPredicate,
@@ -33,6 +33,13 @@ def create_grid_concept_class(
 
     return create_implicit_concept_class(elems, concepts)
 
+def h(x: np.ndarray, p: np.ndarray) -> float:
+    """
+    Computes height of plane at point specified by x
+    Note that x has size n-1, p has size n, where n is number of dimensions of parameter space
+    """
+    return np.dot(x, p[:-1]) + p[-1]
+
 def sep_hyperplane(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
     """
     Given 2 points, p1 and p2, generate a separating hyperplane for the two
@@ -47,7 +54,6 @@ def sep_hyperplane(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
     ndarray containing a_1, a_2, ...
     """
     limit = 10.0
-    eta = 1e-12
     dim = p1.shape[0]
     
     A = np.zeros((dim))
@@ -83,7 +89,6 @@ def nonsep_hyperplane(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
     ndarray containing a_1, a_2, ...
     """
     limit = 10.0
-    eta = 1e-12
     dim = p1.shape[0]
     
     A = np.zeros((dim))
@@ -100,4 +105,10 @@ def nonsep_hyperplane(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
     else:
         A[-1] = np.random.default_rng().uniform(upper + eta, 1 - np.sum(A[:-1]))
     return A
-    
+
+def hyperplane_mem(concept: np.ndarray, plane: np.ndarray) -> bool:
+    """
+    Tests whether a specified atom (hyperplane) belongs to a concept (point in parameter space)
+    Here we assume that membership holds if point is below the plane (ie higher values of parameter result in stricter predicate)
+    """
+    return (concept[0] - h(concept[1:], plane) < -eta)
