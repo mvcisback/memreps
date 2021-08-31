@@ -86,4 +86,3 @@ def create_finite_concept_class(concepts: Iterable[Concept]) -> ConceptClass:
         yield from (c for c in concepts if lposet.is_memrep(c))
 
     return concept_class
-

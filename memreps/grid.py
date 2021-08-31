@@ -7,18 +7,17 @@ import attr
 import numpy as np
 
 
-from memreps import Atom, ConceptClass
-from memreps.implicit import create_implicit_concept_class, Predicate
+from memreps import Atom, Concept, ConceptClass
+from memreps.implicit import create_finite_concept_class, Predicate
 
 
 Parameters = Sequence[float]  # Should be between 0 and 1.
-ParameterizedPredicate = Callable[[Parameters], Predicate]
+ParameterizedConceptFamily = Callable[[Parameters], Concept]
 
 
 def create_grid_concept_class(
-    family: ParameterizedPredicate,
+    family: ParameterizedConceptFamily,
     dim: int,
-    elems: Callable[[Predicate], Iterable[Atom]],
     num_ticks: int) -> ConceptClass:
 
     """Creates a concept class based on a `ticks` × … × `ticks` grid of predicates.
@@ -28,7 +27,8 @@ def create_grid_concept_class(
     """
 
     # Create 1d discretization and take product with itself dim times.
-    points1d = np.linspace(0, 1, num_ticks)
-    concepts = (family(p) for p in product(*repeat(points1d, dim)))
+    points_1d = np.linspace(0, 1, num_ticks)
+    points_nd = product(*repeat(points_1d, dim))
+    concepts = map(family, points_nd)
+    return create_finite_concept_class(concepts)
 
-    return create_implicit_concept_class(elems, concepts)

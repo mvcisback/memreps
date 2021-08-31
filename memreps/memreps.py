@@ -22,7 +22,7 @@ class Concept(Protocol):
     def __xor__(self, other: Concept) -> Concept:
         ...
 
-    def __neg__(self) -> Concept:
+    def __invert__(self) -> Concept:
         ...
 
     def __iter__(self) -> Iterable[Atom]:
