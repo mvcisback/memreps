@@ -10,6 +10,9 @@ from memreps.memreps import Atom
 from memreps.grid import create_grid_concept_class
 
 
+__all__ = ['MonotoneConcept', 'create_monotone_concept_class']
+
+
 @attr.frozen
 class MonotoneConcept:
     points: frozenset[Sequence[float]]
@@ -87,6 +90,14 @@ def sep_hyperplane(p1, p2, eta: float = 1e-12) -> np.ndarray:
     delta2 = p2[0] - h2
     A[-1] = np.random.default_rng().uniform(min(delta1, delta2), max(delta1, delta2))
     return A
+
+
+def create_monotone_concept_class(dim: int, num_ticks: int) -> ConceptClass:
+    return create_grid_concept_class(
+        family=MonotoneConcept.from_point,
+        dim=dim,
+        num_ticks=num_ticks,
+    )
 
 
 def nonsep_hyperplane(p1: np.ndarray, p2: np.ndarray, eta: float = 1e-12) -> np.ndarray:
