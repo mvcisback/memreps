@@ -129,10 +129,11 @@ def nonsep_hyperplane(p1: np.ndarray, p2: np.ndarray, eta: float = 1e-12) -> np.
     delta2 = p2[0] - h2
     lower = min(delta1, delta2)
     upper = max(delta1, delta2)
+    uniform = np.random.default_rng().uniform
     if np.random.default_rng().integers(2):
-        A[-1] = np.random.default_rng().uniform(min(0, lower - eta), lower - eta)
+        A[-1] = uniform(min(0, lower - eta), lower - eta)
     else:
-        A[-1] = np.random.default_rng().uniform(upper + eta, max(upper + eta, 1 - np.sum(A[:-1])))
+        A[-1] = uniform(upper + eta, max(upper + eta, 1 - np.sum(A[:-1])))
     return A
 
 
