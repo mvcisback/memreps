@@ -50,5 +50,4 @@ def test_monotone_grid():
     concept_class = create_monotone_concept_class(dim=3, num_ticks=4)
     
     for concept1, concept2 in combinations(concept_class(), 2):
-        pass
-        # validate_concept_pair(concept1, concept2)
+        validate_concept_pair(concept1, concept2)

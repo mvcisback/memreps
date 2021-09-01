@@ -74,8 +74,8 @@ def sep_hyperplane(p1, p2, eta: float = 1e-12) -> np.ndarray:
     dim = p1.shape[0]
     
     A = np.zeros((dim))
-    h1 = h2 = 0
-    while abs(h1 - h2) < eta:
+    delta1 = delta2 = 0
+    while abs(delta1 - delta2) < eta:
         # Generating random gradients (a_n = 0 for now)
         A[:-1] = -np.random.default_rng().uniform(0, limit, size = (dim-1))
 
@@ -83,11 +83,9 @@ def sep_hyperplane(p1, p2, eta: float = 1e-12) -> np.ndarray:
         # We do this by calculating x_0 of hyperplane at p1 and p2's locations
         # These must differ by at least eta, for there to be some a_n that
         # separates the two.
-        h1 = p1[1:] @ A[:-1]
-        h2 = p2[1:] @ A[:-1]
+        delta1 = p1[0] - p1[1:] @ A[:-1]
+        delta2 = p2[0] - p2[1:] @ A[:-1]
 
-    delta1 = p1[0] - h1
-    delta2 = p2[0] - h2
     A[-1] = np.random.default_rng().uniform(min(delta1, delta2), max(delta1, delta2))
     return A
 
@@ -132,9 +130,9 @@ def nonsep_hyperplane(p1: np.ndarray, p2: np.ndarray, eta: float = 1e-12) -> np.
     lower = min(delta1, delta2)
     upper = max(delta1, delta2)
     if np.random.default_rng().integers(2):
-        A[-1] = np.random.default_rng().uniform(0, lower - eta)
+        A[-1] = np.random.default_rng().uniform(min(0, lower - eta), lower - eta)
     else:
-        A[-1] = np.random.default_rng().uniform(upper + eta, 1 - np.sum(A[:-1]))
+        A[-1] = np.random.default_rng().uniform(upper + eta, max(upper + eta, 1 - np.sum(A[:-1])))
     return A
 
 
@@ -144,4 +142,4 @@ def hyperplane_mem(concept, plane, eta: float = 1e-12) -> bool:
     Here we assume that membership holds if point is below the plane (ie higher values of parameter result in stricter predicate)
     """
     height = concept[1:] @ plane[:-1] + plane[-1]
-    return concept[0] - height < -eta
+    return concept[0] - height < 0
