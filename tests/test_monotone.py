@@ -76,7 +76,7 @@ def test_monotone_memreps():
     learner = memreps.create_learner(
         my_concept_class,
         compare_cost=1,
-        membership_cost=3,
+        membership_cost=5,
         query_limit=200,
     )
 
@@ -89,8 +89,8 @@ def test_monotone_memreps():
         if kind == '≺':
             left, right = map(np.array, payload)
 
-            intersects_l = np.array([left[1], -left[1] / left[0]])
-            intersects_r = np.array([right[1], -right[1] / right[0]])
+            if np.random.rand() < 0.1:
+                response = '||'
 
             if (left in my_concept) <= (right in my_concept):
                 response = '≺'
