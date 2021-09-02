@@ -138,14 +138,9 @@ def create_learner(
 # ===================== Bandit Details =====================
 
 
-def worst_case_smax(summaries, _):
-    vals = [max(s.values()) for s in summaries]
-    return softmax(1 - np.array(vals))
-
-
 def worst_case_smax_comparable(summaries, _):
     vals = [max(v for k, v in s.items() if k != '||') for s in summaries]
-    return softmax(1 - np.array(vals))
+    return softmax(-np.array(vals))
 
 
 def historical_smax(summaries, hist):
@@ -153,16 +148,13 @@ def historical_smax(summaries, hist):
     for summary in summaries:
         kind = '∈' if '∈' in summary else '≺'
         dist = hist[kind]
-        val = sum((1 - v) * dist[k] for k, v in summary.items())
+        val = sum(v * dist[k] for k, v in summary.items())
         val /= sum(dist.values())
         vals.append(val)
-    return softmax(vals)
+    return softmax(-np.array(vals))
 
 
 EXPERTS = [
-    lambda summaries, _: [float('∈' in s) for s in summaries],
-    lambda summaries, _: [float('≺' in s) for s in summaries],
-    worst_case_smax,
     worst_case_smax_comparable,
     historical_smax,
 ]
@@ -193,20 +185,23 @@ class QuerySelector:
     def __call__(self, queries: list[Query]) -> Query:
         assert self.loss_map is None, "Must update selector with loss."
 
-        summaries = [self.summarize(q) for q in queries]
-        advice = [expert(summaries, self.hist) for expert in EXPERTS]
+        loss_maps = []
+        for q in queries:
+            cost = self.mem_cost if q[0] == '∈' else self.cmp_cost
+ 
+            loss_maps.append({
+                k: cost*s for k, s in self.summarize(q).items()
+            })
+
+        advice = [expert(loss_maps, self.hist) for expert in EXPERTS]
 
         arm = self.player.send((self.loss, advice))
-        query = queries[arm]
 
         # Setup loss_map.
-        query_cost = self.mem_cost if query[0] == '∈' else self.cmp_cost
-        query_cost /= max(self.mem_cost, self.cmp_cost)
-        summary = summaries[arm]
-        self.loss_map = {k: (query_cost + s) / 2 for k, s in summary.items()}
+        self.loss_map = loss_maps[arm] 
         self.loss = None
 
-        return query
+        return queries[arm]
 
     def update(self, response: MemResponse | CmpResponse):
         assert self.loss is None, "Must first select a query!."
@@ -217,6 +212,7 @@ class QuerySelector:
             self.hist['≺'].update(response)
 
         self.loss, self.loss_map = self.loss_map[response], None
+        self.loss /= max(self.mem_cost, self.cmp_cost)
 
     def summarize(self, query: Query) -> ResultMap:
         if query[0] == '∈':

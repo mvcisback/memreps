@@ -9,9 +9,6 @@ def test_simple_concept_class():
         concepts = [{2}, {1}, {1, 2}],
     )
 
-    concept = next(gen_concepts())
-    assert concept.elements == {2}
-
     assumptions = [(('≺', (1, 2)), '≺')]
     lpreset = finite.LabeledPreSet.from_assumptions(assumptions)
     assert lpreset.support == {1, 2}
