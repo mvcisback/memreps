@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from typing import Any, Iterable, Sequence
 
 import attr
@@ -76,9 +77,9 @@ class LabeledPreSet:
 
 def create_finite_concept_class(concepts: Iterable[Concept]) -> ConceptClass:
     concepts = list(concepts)
-    # TODO: shuffle.
 
     def concept_class(assumptions=()):
+        random.shuffle(concepts)
         try:
             lposet = LabeledPreSet.from_assumptions(assumptions)
         except nx.NetworkXError:

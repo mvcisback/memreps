@@ -32,6 +32,7 @@ class MonotoneConcept:
         return attr.evolve(self, negated=not self.negated)
 
     def __contains__(self, plane):
+        plane = np.array(plane)
         val = self.negated
         for point in self.points:
             val ^= hyperplane_mem(point, plane)
@@ -50,7 +51,7 @@ class MonotoneConcept:
 
         get_plane = nonsep_hyperplane if self.negated else sep_hyperplane
         while True:
-            yield get_plane(left, right, self.eta)
+            yield tuple(get_plane(left, right, self.eta))
         
 
 
