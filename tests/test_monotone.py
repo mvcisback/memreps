@@ -76,7 +76,7 @@ def test_monotone_memreps():
     learner = memreps.create_learner(
         my_concept_class,
         compare_cost=1,
-        membership_cost=10,
+        membership_cost=3,
         query_limit=200,
     )
 
@@ -97,7 +97,7 @@ def test_monotone_memreps():
             elif (right in my_concept) <= (left in my_concept):
                 response = '≻'
             elif (right in my_concept) == (left in my_concept): 
-                response = '='
+                response = '||'
             else:
                 response = '||'
 
