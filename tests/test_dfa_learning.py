@@ -79,14 +79,13 @@ def test_gridworld_dfa():
             else:
                 counterex, label = resp
                 return ('∈', counterex), label
-    transition_dict = {0: (False, {'R': 0, 'B': 0, 'O': 0, 'W': 0, 'Y': 0}),
-                       1: (False, {'R': 0, 'B': 2, 'O': 1, 'W': 1, 'Y': 1}),
-                       2: (False, {'R': 0, 'B': 2, 'O': 3, 'W': 2, 'Y': 0}),
-                       3: (False, {'R': 0, 'B': 2, 'O': 4, 'W': 3, 'Y': 0}),
-                       4: (False, {'R': 0, 'B': 2, 'O': 4, 'W': 4, 'Y': 5}),
-                       5: (True,  {'R': 0, 'B': 5, 'O': 5, 'W': 5, 'Y': 5})}
+    transition_dict = {0: (False, {'R': 0, 'B': 0, 'O': 0, 'Y': 0}),
+                       1: (False, {'R': 0, 'B': 1, 'O': 2, 'Y': 0}),
+                       2: (False, {'R': 0, 'B': 1, 'O': 2, 'Y': 3}),
+                       3: (True, {'R': 0, 'B': 1, 'O': 3, 'Y': 3})}
 
-    true_dfa = dict2dfa(transition_dict, 1)
+
+    true_dfa = dict2dfa(transition_dict, 2)
 
     def pref_fxn(word1, word2):
         trace1 = list(true_dfa.trace(word1))
@@ -114,8 +113,8 @@ def test_gridworld_dfa():
             else:
                 return cex, '∉'
 
-    accepting = ['WBOOYY', 'WBWBWOWOWY']
-    rejecting = ['R', 'WYBY']
+    accepting = ['BOOY', 'Y', 'OBOY']
+    rejecting = ['R', 'BY']
 
     resulting_dfa = dfa_memreps(oracle, 2, 1, query_limit=150, accepting=accepting, rejecting=rejecting)
     assert find_equiv_counterexample(true_dfa, resulting_dfa.dfa) is None
