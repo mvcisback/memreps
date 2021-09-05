@@ -82,26 +82,22 @@ def test_monotone_memreps():
 
     response = None
     query_histogram = Counter()
-    for count in range(100):
+    for count in range(200):
         kind, payload = learner.send(response)
         query_histogram.update(kind)
 
         if kind == '≺':
             left, right = map(np.array, payload)
 
-            if np.random.rand() < 0.1:
+            if np.random.rand() < 0.2:
                 response = '||'
 
-            if (left in my_concept) <= (right in my_concept):
+            if (left in my_concept) < (right in my_concept):
                 response = '≺'
-            elif (right in my_concept) <= (left in my_concept):
+            elif (right in my_concept) < (left in my_concept):
                 response = '≻'
-            elif (right in my_concept) == (left in my_concept): 
-                response = '||'
             else:
-                response = '||'
-
-            print('here', response)
+                response = '≺'
         elif kind == '≡':
             if my_concept == payload:
                 break
