@@ -59,13 +59,15 @@ def test_monotone_memreps(membership_cost: int = 5, force_membership: bool = Fal
     res = 4 
     my_param = np.array((1/res, 2/res))
     my_concept = MonotoneConcept.from_point(my_param)
-    ticks = 5
+    ticks = 17
 
     def my_concept_class(assumptions):
         nonlocal ticks
 
-        for ticks in range(ticks, 6):
+        for ticks in range(ticks, 200):
+            #print(f'----ticks----: {ticks}')
             concepts = create_monotone_concept_class(dim=2, num_ticks=ticks)
+
             concepts = concepts(assumptions)
 
             if (first := fn.first(concepts)) is not None:

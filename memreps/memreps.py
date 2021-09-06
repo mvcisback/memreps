@@ -124,10 +124,7 @@ def create_learner(
                 assert (left in concept12) != (right in concept12)
                 print((left in ~concept12) == (right in ~concept12))
                 queries = [('∈', left), ('≺', (left, right))]
-            if force_membership:
-                query = queries[0]
-            else:
-                query = query_selector(queries)
+            query = query_selector(queries)
 
         response = yield query
 
