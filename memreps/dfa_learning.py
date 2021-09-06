@@ -8,7 +8,7 @@ from dfa import DFA
 from dfa.utils import find_equiv_counterexample, find_subset_counterexample, find_word
 from memreps.memreps import create_learner, MemQuery, CmpQuery, EqQuery
 from memreps.memreps import Atom, Assumptions, Response, Query, Concept, Literal
-
+from collections import Counter
 from dfa_identify.identify import find_dfa, find_dfas
 
 
@@ -93,8 +93,11 @@ def dfa_memreps(
     accepting: Optional[list[Atom]] = None,
     rejecting: Optional[list[Atom]] = None,
     ordered_preference_words: Optional[list[Tuple[Atom, Atom]]] = None,
-    incomparable_preference_words: Optional[list[Tuple[Atom, Atom]]] = None
+    incomparable_preference_words: Optional[list[Tuple[Atom, Atom]]] = None,
+    force_membership: bool = False
 ):
+    if force_membership:
+        compare_cost = 100 * membership_cost
     concept_class = create_dfa_concept_class(
         strong_memrep=strong_memrep,
         accepting=accepting,
@@ -106,16 +109,18 @@ def dfa_memreps(
      #  create initial learner and generate initial query
     dfa_learner = create_learner(concept_class, membership_cost, compare_cost, query_limit=query_limit)
     query = dfa_learner.send(None)
+    query_histogram = Counter()
     for itr in range(query_limit):
         # get a response from the oracle
         response = oracle(query)
         query_type, concept = query
+        query_histogram.update(query_type)
         if query_type == '≡':
             # we are in an equivalence query. return if we are indeed equivalent
             if response is None:
-                return concept
+                return concept, query_histogram
         query = dfa_learner.send(response)
         print("On iteration: ", itr)
         print(query)
     query_type, concept = query
-    return concept
+    return concept, query_histogram
