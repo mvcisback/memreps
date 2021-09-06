@@ -134,12 +134,13 @@ def create_learner(
 
         if queries is not None:
             query_selector.update(response)
+        queries = None
         
+        known_queries[query] = response
         if query[0] != '≡':  # Equiv responses contain query already.
             response = (query, response)
 
         assumptions.append(response)
-        known_queries[query] = response
 
 
 # ===================== Bandit Details =====================
