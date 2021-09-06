@@ -46,10 +46,13 @@ def plot_bars(results_dict, baseline_dict):
     cmap = plt.cm.get_cmap('Pastel1')
     X_axis = np.arange(num_ratios)
     bar_width = 0.4
+    res_y_offset = np.zeros(len(columns))
+    base_y_offset = np.zeros(len(columns))
     for row in range(3):
-        breakpoint()
-        plt.bar(X_axis - 0.2, res_data[row], 0.4, color=cmap(row), edgecolor="black")
-        plt.bar(X_axis + 0.2, base_data[row], 0.4, color=cmap(row), edgecolor="black")
+        plt.bar(X_axis - 0.2, res_data[row], bar_width, yerr=res_stds[row], color=cmap(row), bottom=res_y_offset, edgecolor="black")
+        res_y_offset = res_y_offset + res_data[row]
+        plt.bar(X_axis + 0.2, base_data[row], bar_width, yerr=base_stds[row], color=cmap(row), bottom=base_y_offset, edgecolor="black")
+        base_y_offset = base_y_offset + base_data[row]
         #plt.bar(X_axis, data[row], bar_width, color=cmap(row))
     plt.xticks(X_axis, columns)
     breakpoint()
