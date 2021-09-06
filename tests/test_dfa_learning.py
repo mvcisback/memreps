@@ -113,8 +113,8 @@ def test_gridworld_dfa():
             else:
                 return cex, '∉'
 
-    accepting = ['BOOY', 'Y', 'OBOY']
-    rejecting = ['R', 'BY']
+    accepting = ['Y', 'YY', 'OY']
+    rejecting = ['', 'R', 'RY', 'YR', 'BR', 'RB', 'OR', 'RO']
 
     resulting_dfa = dfa_memreps(oracle, 2, 1, query_limit=150, accepting=accepting, rejecting=rejecting)
     assert find_equiv_counterexample(true_dfa, resulting_dfa.dfa) is None

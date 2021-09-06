@@ -59,7 +59,7 @@ def test_monotone_memreps(membership_cost: int = 5, force_membership: bool = Fal
     res = 4 
     my_param = np.array((1/res, 2/res))
     my_concept = MonotoneConcept.from_point(my_param)
-    ticks = 3
+    ticks = 5
 
     def my_concept_class(assumptions):
         nonlocal ticks
@@ -73,12 +73,14 @@ def test_monotone_memreps(membership_cost: int = 5, force_membership: bool = Fal
                 yield from concepts
                 break
 
+    if force_membership:
+        compare_cost = 100 * membership_cost
+
     learner = memreps.create_learner(
         my_concept_class,
         compare_cost=1,
         membership_cost=membership_cost,
         query_limit=200,
-        force_membership=force_membership
     )
 
     response = None
@@ -90,7 +92,7 @@ def test_monotone_memreps(membership_cost: int = 5, force_membership: bool = Fal
         if kind == '≺':
             left, right = map(np.array, payload)
 
-            if np.random.rand() < 0.2:
+            if np.random.rand() < 0.1:
                 response = '||'
 
             if (left in my_concept) < (right in my_concept):
