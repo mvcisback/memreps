@@ -59,7 +59,7 @@ def test_monotone_memreps(membership_cost: int = 5, force_membership: bool = Fal
     res = 4 
     my_param = np.array((1/res, 2/res))
     my_concept = MonotoneConcept.from_point(my_param)
-    ticks = 17
+    ticks = 3
 
     def my_concept_class(assumptions):
         nonlocal ticks
@@ -102,7 +102,7 @@ def test_monotone_memreps(membership_cost: int = 5, force_membership: bool = Fal
             elif (right in my_concept) < (left in my_concept):
                 response = '≻'
             else:
-                response = '≺'
+                response = '='
         elif kind == '≡':
             if my_concept == payload:
                 break
