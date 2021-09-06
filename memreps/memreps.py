@@ -62,7 +62,8 @@ def create_learner(
         gen_concepts: ConceptClass,
         membership_cost: float,
         compare_cost: float,
-        query_limit: int = 50) -> LearningAPI:
+        query_limit: int = 50,
+        force_membership: bool = False) -> LearningAPI:
     """Create learner for interactiving learning a concept φ*.
 
     Assumes that atoms form a membership respecting pre-order, i.e.,
@@ -122,7 +123,7 @@ def create_learner(
             else:
                 left, right = atoms1[0], atoms2[0]
                 queries = [('∈', left), ('≺', (left, right))]
-                query = query_selector(queries)
+                query = query_selector(queries, force_membership=force_membership)
 
         response = yield query
 
@@ -182,11 +183,12 @@ class QuerySelector:
         '∈': Counter(['∈', '∉']), '≺': Counter(['≺', '≻', '=', '||'])
     })
 
-    def __call__(self, queries: list[Query]) -> Query:
+    def __call__(self, queries: list[Query], force_membership: bool = False) -> Query:
         assert self.loss_map is None, "Must update selector with loss."
 
         loss_maps = []
         for q in queries:
+
             cost = self.mem_cost if q[0] == '∈' else self.cmp_cost
  
             loss_maps.append({
@@ -197,10 +199,14 @@ class QuerySelector:
 
         arm = self.player.send((self.loss, advice))
 
-        # Setup loss_map.
-        self.loss_map = loss_maps[arm] 
-        self.loss = None
 
+        if force_membership:
+            self.loss_map = loss_maps[0]
+            self.loss = None
+            return queries[0]
+        # Setup loss_map.
+        self.loss_map = loss_maps[arm]
+        self.loss = None
         return queries[arm]
 
     def update(self, response: MemResponse | CmpResponse):

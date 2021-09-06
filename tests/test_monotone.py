@@ -55,9 +55,9 @@ def test_monotone_grid():
         validate_concept_pair(concept1, concept2)
 
 
-def test_monotone_memreps():
+def test_monotone_memreps(membership_cost: int = 5, force_membership: bool = False):
     res = 4 
-    my_param = np.array((1/4, 2/4))
+    my_param = np.array((1/res, 2/res))
     my_concept = MonotoneConcept.from_point(my_param)
     ticks = 3
 
@@ -76,8 +76,9 @@ def test_monotone_memreps():
     learner = memreps.create_learner(
         my_concept_class,
         compare_cost=1,
-        membership_cost=5,
+        membership_cost=membership_cost,
         query_limit=200,
+        force_membership=force_membership
     )
 
     response = None
@@ -115,3 +116,4 @@ def test_monotone_memreps():
     assert my_concept == payload
     print(query_histogram)
     print(count)
+    return query_histogram
