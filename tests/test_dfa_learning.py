@@ -88,14 +88,16 @@ def test_gridworld_dfa(membership_cost: int = 1, force_membership: bool = False)
     true_dfa = dict2dfa(transition_dict, 2)
 
     def pref_fxn(word1, word2):
-        trace1 = list(true_dfa.trace(word1))
-        trace2 = list(true_dfa.trace(word2))
-        if trace1[-1] > trace2[-1]:
-            return '≻'
-        elif trace2[-1] > trace1[-1]:
+        if np.random.rand() < 0.1:
+            response = '||'
+
+        left, right = true_dfa.label(word1), true_dfa.label(word2)
+        if left < right:
             return '≺'
+        elif right < left:
+            return '≻'
         else:
-            return '||'
+            return '='
 
     def membership_fxn(word):
         if true_dfa.label(word):

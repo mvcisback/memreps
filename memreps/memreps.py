@@ -96,6 +96,7 @@ def create_learner(
     response = None
     gen_concepts = partial(gen_concepts, assumptions=assumptions)
     query_selector = QuerySelector(gen_concepts, membership_cost, compare_cost)
+    known_queries = {}
 
     while True:
         concepts = gen_concepts()
@@ -126,11 +127,16 @@ def create_learner(
                 queries = [('∈', left), ('≺', (left, right))]
             query = query_selector(queries)
 
-        response = yield query
+        if query in known_queries:
+            response = known_queries[query]
+        else:
+            response = yield query
 
         if queries is not None:
             query_selector.update(response)
+        queries = None
         
+        known_queries[query] = response
         if query[0] != '≡':  # Equiv responses contain query already.
             response = (query, response)
 
