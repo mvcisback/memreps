@@ -103,7 +103,7 @@ def test_monotone_memreps(membership_cost: int = 5, force_membership: bool = Fal
             elif (right in my_concept) < (left in my_concept):
                 response = '≻'
             else:
-                response = '='
+                response = '=' if np.random.rand() > 0.2 else '≺'
         elif kind == '≡':
             if my_concept == payload:
                 break
