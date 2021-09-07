@@ -58,6 +58,20 @@ ConceptClass = Callable[[Assumptions], Iterable[Concept]]
 # ====================== Learner ===========================
 
 
+def find_distiguishing(concept1, concept2, atoms):
+    if len(atoms) <= 1:
+        return None
+
+    x, *atoms = atoms
+    polarity = x in concept1
+    assert (x in concept2) != polarity
+    
+    for y in atoms:
+        if (y in concept1) != polarity:
+            assert (y in concept2) == polarity
+            return x, y
+
+
 def create_learner(
         gen_concepts: ConceptClass,
         membership_cost: float,
@@ -113,17 +127,19 @@ def create_learner(
             query = ('≡', concept1)                        # |Φ| = 1.
         else:
             concept12 = concept1 ^ concept2
-            atoms1 = fn.take(1, concept12)
-            atoms2 = fn.take(1, ~concept12)
+            atoms1 = fn.take(20, concept12)
+            atoms2 = fn.take(2, ~concept12)
+
+            xy = find_distiguishing(concept1, concept2, atoms1)
 
             if len(atoms1) == 0:
                 queries = [('∈', atoms2[0]), ('≺', (atoms2[0], atoms2[-1]))]
             elif len(atoms2) == 0:
-                queries = [('∈', atoms1[0]), ('≺', (atoms1[0], atoms1[-1]))]
+                left, right = atoms2 if xy is None else xy
+                queries = [('∈', atoms1[0]), ('≺', (left, right))]
             else:
-                left, right = atoms1[0], atoms2[0]
-                assert (left in concept12) != (right in concept12)
-                print((left in ~concept12) == (right in ~concept12))
+                left, right = (atoms1[0], atoms2[0]) if xy is None else xy
+                print((left, right) == xy)
                 queries = [('∈', left), ('≺', (left, right))]
             query = query_selector(queries)
 
@@ -219,6 +235,7 @@ class QuerySelector:
         else:
             self.hist['≺'].update(response)
 
+            
         self.loss, self.loss_map = self.loss_map[response], None
         self.loss /= max(self.mem_cost, self.cmp_cost)
 
