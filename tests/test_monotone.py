@@ -80,7 +80,7 @@ def test_monotone_memreps(initial_point=(1,2), membership_cost: int = 5, force_m
 
     learner = memreps.create_learner(
         my_concept_class,
-        compare_cost=1,
+        compare_cost=100,
         membership_cost=membership_cost,
         query_limit=200,
     )
@@ -102,7 +102,7 @@ def test_monotone_memreps(initial_point=(1,2), membership_cost: int = 5, force_m
             elif (right in my_concept) < (left in my_concept):
                 response = '≻'
             else:
-                response = '=' if np.random.rand() > 0.2 else '≺'
+                response = '=' if np.random.rand() > 0.5 else '≺'
         elif kind == '≡':
             if my_concept == payload:
                 break
