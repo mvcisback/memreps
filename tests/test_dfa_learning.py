@@ -62,7 +62,7 @@ def test_equivalence_memreps():
     assert find_equiv_counterexample(true_dfa, resulting_dfa.dfa) is None
 
 
-def test_gridworld_dfa():
+def test_gridworld_dfa(membership_cost: int = 1, force_membership: bool = False):
     def oracle(full_query):
         query_symbol, query = full_query
         if query_symbol == '∈':
@@ -118,5 +118,7 @@ def test_gridworld_dfa():
     accepting = ['Y', 'YY', 'OY']
     rejecting = ['', 'R', 'RY', 'YR', 'BR', 'RB', 'OR', 'RO']
 
-    resulting_dfa = dfa_memreps(oracle, 5, 1, query_limit=150, accepting=accepting, rejecting=rejecting)
+    resulting_dfa, query_hist = dfa_memreps(oracle, membership_cost, 1, query_limit=250,
+                                            accepting=accepting, rejecting=rejecting, force_membership=force_membership)
     assert find_equiv_counterexample(true_dfa, resulting_dfa.dfa) is None
+    return query_hist
