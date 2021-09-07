@@ -55,10 +55,9 @@ def test_monotone_grid():
         validate_concept_pair(concept1, concept2)
 
 
-def test_monotone_memreps(membership_cost: int = 5, force_membership: bool = False):
+def test_monotone_memreps(initial_point=(1,2), membership_cost: int = 5, force_membership: bool = False):
     res = 4
-    my_num_1, my_num_2 = np.random.randint(1, 5), np.random.randint(1, 5)
-    my_param = np.array((my_num_1/res, my_num_2/res))
+    my_param = np.array((initial_point[0]/res, initial_point[1]/res))
     my_concept = MonotoneConcept.from_point(my_param)
     ticks = 3
 
