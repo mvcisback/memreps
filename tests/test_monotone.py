@@ -55,7 +55,7 @@ def test_monotone_grid():
         validate_concept_pair(concept1, concept2)
 
 
-def test_monotone_memreps(initial_point=(1,2), membership_cost: int = 5, force_membership: bool = False):
+def test_monotone_memreps(membership_cost: int = 10, force_membership: bool = False, initial_point=(1,2)):
     res = 4
     my_param = np.array((initial_point[0]/res, initial_point[1]/res))
     my_concept = MonotoneConcept.from_point(my_param)
@@ -102,7 +102,7 @@ def test_monotone_memreps(initial_point=(1,2), membership_cost: int = 5, force_m
             elif (right in my_concept) < (left in my_concept):
                 response = '≻'
             else:
-                response = '=' if np.random.rand() > 0.5 else '≺'
+                response = '=' if np.random.rand() > 0.3 else '≺'
         elif kind == '≡':
             if my_concept == payload:
                 break

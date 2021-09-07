@@ -81,7 +81,7 @@ def plot_bars(results_dict, baseline_dict, plotfilename):
     plt.xlabel('Ratio of membership cost to preference cost')
     plt.savefig(plotfilename, format='pdf')
 
-run_experiment([1,2,3,4,5], 70, "monotone_results_low_var_70_tr.pdf", "monotone70trials_lowvar", monotone_exp=True)
+run_experiment([0.25, 0.5, 1,2,4,8,16], 20, "monotone_results_low_var_10_tr.pdf", "monotone10trials_lowvar", monotone_exp=True)
 # with open("dfa10trials", "rb") as fle:
 #     resultstotal = pickle.load(fle)
 #     dfaresults = resultstotal["results"]
