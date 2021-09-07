@@ -97,7 +97,7 @@ def test_gridworld_dfa(membership_cost: int = 1, force_membership: bool = False)
         elif right < left:
             return '≻'
         else:
-            return '='
+            return '=' if np.random.rand() > 0.3 else '≺'
 
     def membership_fxn(word):
         if true_dfa.label(word):
