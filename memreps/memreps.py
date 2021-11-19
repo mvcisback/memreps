@@ -4,13 +4,13 @@ from collections import defaultdict
 from functools import partial
 from typing import (Any, Callable, Counter, Generator,
                     Iterable, Literal, Protocol, Union)
-
 import attr
 import exp4
 import funcy as fn
 import numpy as np
+import networkx as nx
 from exp4.algo import softmax
-
+from dfa.utils import find_subset_counterexample
 
 Atom = Any
 
@@ -71,12 +71,82 @@ def find_distiguishing(concept1, concept2, atoms):
             assert (y in concept2) == polarity
             return x, y
 
+def find_maximally_distinguishing(concept_gen, max_concepts=15, max_atoms=20):
+    #find min cut of the hasse diagram from the concept generator
+    # construct the Hasse diagram from the concepts
+    concept_num = 0
+    hasse = nx.DiGraph()
+    for concept in concept_gen:
+        if concept_num > max_concepts:
+            break
+        concept_num += 1
+        hasse.add_node(concept_num, concept=concept)
+        for candidate in hasse.nodes:
+            if find_subset_counterexample(concept, hasse.nodes[candidate]["concept"]) is None:
+                hasse.add_edge(candidate, concept_num)
+            elif find_subset_counterexample(candidate, concept) is None:
+                hasse.add_edge(concept_num, candidate)
+    hasse.add_node("T", concept=None)  # add source node
+    hasse.add_node("⊥", concept=None)  # add sink node
+    for concept_node in hasse.nodes:
+        if hasse.in_degree(concept_node) == 0:
+            hasse.add_edge("T", concept_node, capacity=1)
+        elif hasse.out_degree(concept_node) == 0:
+            hasse.add_edge(concept_node, "⊥")
+    # find the min-cut
+    cut_value, partition = nx.minimum_cut(hasse, "T", "⊥")
+    reachable, non_reachable = partition
+    cutset = set()
+    for u, nbrs in ((n, hasse[n]) for n in reachable):
+        cutset.update(v for v in nbrs if v in non_reachable)
+    def get_best_atom(atom_list):
+        best_atom, best_score = None, 0
+        for atom in atom_list:
+            accepting_num = 0
+            for concept_node in hasse.nodes:
+                if atom in hasse.nodes[concept_node]["concept"]:
+                    accepting_num += 1
+            score = (min(accepting_num, concept_num - accepting_num) / concept_num)
+            best_atom = atom if score > best_score else best_atom
+            best_score = score if score > best_score else best_score
+        return best_atom
+    # now, sample nodes from the symmetric difference
+    symmetric_diff_concept = None
+    atom_set1 = []
+    atom_set2 = []
+    for concept_node_id in cutset:
+        if symmetric_diff_concept is None:
+            symmetric_diff_concept = hasse.nodes[concept_node_id]["concept"]
+            atom_set1 = fn.take(max_atoms, symmetric_diff_concept)
+            atom_set2 = fn.take(max_atoms, ~symmetric_diff_concept)
+            if len(atom_set1) == 0:
+                atom_x = get_best_atom(atom_set2)
+                atom_set2.remove(atom_x)
+                atom_y = get_best_atom(atom_set2)
+                return atom_x, atom_y
+            elif len(atom_set2) == 0:
+                atom_x = get_best_atom(atom_set1)
+                atom_set2.remove(atom_x)
+                atom_y = get_best_atom(atom_set1)
+                return atom_x, atom_y
+        else:
+            symmetric_diff_concept = symmetric_diff_concept ^ hasse.nodes[concept_node_id]["concept"]
+        new_atom_set1 = fn.take(max_atoms, symmetric_diff_concept)
+        new_atom_set2 = fn.take(max_atoms, ~symmetric_diff_concept)
+        if len(new_atom_set1) == 0 or len(new_atom_set2) == 0:
+            break
+        atom_set1 = new_atom_set1
+        atom_set2 = new_atom_set2
+    # evaluate each atom sampled for its reduction in concept class size
+    return get_best_atom(atom_set1), get_best_atom(atom_set2)
 
 def create_learner(
         gen_concepts: ConceptClass,
         membership_cost: float,
         compare_cost: float,
-        query_limit: int = 50) -> LearningAPI:
+        query_limit: int = 50,
+        max_concepts: int = 15,
+        max_atom_samples: int = 20) -> LearningAPI:
     """Create learner for interactiving learning a concept φ*.
 
     Assumes that atoms form a membership respecting pre-order, i.e.,
@@ -120,7 +190,7 @@ def create_learner(
 
         queries = None
         if len(assumptions) > query_limit:  # max num. of queries reached
-            yield '≡', next(concepts, None)
+            yield '≡', concept1
             return
 
         if (concept2 := next(concepts, None)) is None:
