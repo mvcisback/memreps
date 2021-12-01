@@ -28,6 +28,8 @@ class Concept(Protocol):
     def __iter__(self) -> Iterable[Atom]:
         ...
 
+    def subset_of(self, other: Concept) -> Atom:
+        ...
 
 # ================== Learning API ==========================
 
@@ -82,33 +84,41 @@ def find_maximally_distinguishing(concept_gen, max_concepts=15, max_atoms=20):
         concept_num += 1
         hasse.add_node(concept_num, concept=concept)
         for candidate in hasse.nodes:
-            if find_subset_counterexample(concept, hasse.nodes[candidate]["concept"]) is None:
-                hasse.add_edge(candidate, concept_num)
-            elif find_subset_counterexample(candidate, concept) is None:
-                hasse.add_edge(concept_num, candidate)
+            if candidate == concept_num:
+                continue # don't want to add self-edges
+            if concept.subset_of(hasse.nodes[candidate]["concept"]) is None:
+                hasse.add_edge(candidate, concept_num, capacity=1)
+            elif hasse.nodes[candidate]["concept"].subset_of(concept) is None:
+                hasse.add_edge(concept_num, candidate, capacity=1)
     hasse.add_node("T", concept=None)  # add source node
     hasse.add_node("⊥", concept=None)  # add sink node
     for concept_node in hasse.nodes:
-        if hasse.in_degree(concept_node) == 0:
-            hasse.add_edge("T", concept_node, capacity=1)
-        elif hasse.out_degree(concept_node) == 0:
-            hasse.add_edge(concept_node, "⊥")
+        if hasse.in_degree(concept_node) == 0 and concept_node != "T":
+            hasse.add_edge("T", concept_node, capacity=max_concepts)
+        elif hasse.out_degree(concept_node) == 0 and concept_node != "⊥":
+            hasse.add_edge(concept_node, "⊥", capacity=1)
     # find the min-cut
+    extraneous_nodes = {"T", "⊥"}
     cut_value, partition = nx.minimum_cut(hasse, "T", "⊥")
     reachable, non_reachable = partition
-    cutset = set()
+    cutset = set([])
     for u, nbrs in ((n, hasse[n]) for n in reachable):
-        cutset.update(v for v in nbrs if v in non_reachable)
+        for v in nbrs:
+            if v in non_reachable:
+                cutset.update([u, v])
+    cutset = cutset.difference(extraneous_nodes)
     def get_best_atom(atom_list):
         best_atom, best_score = None, 0
         for atom in atom_list:
             accepting_num = 0
             for concept_node in hasse.nodes:
+                if concept_node in extraneous_nodes:
+                    continue
                 if atom in hasse.nodes[concept_node]["concept"]:
                     accepting_num += 1
             score = (min(accepting_num, concept_num - accepting_num) / concept_num)
-            best_atom = atom if score > best_score else best_atom
-            best_score = score if score > best_score else best_score
+            best_atom = atom if score >= best_score else best_atom
+            best_score = score if score >= best_score else best_score
         return best_atom
     # now, sample nodes from the symmetric difference
     symmetric_diff_concept = None
@@ -117,16 +127,19 @@ def find_maximally_distinguishing(concept_gen, max_concepts=15, max_atoms=20):
     for concept_node_id in cutset:
         if symmetric_diff_concept is None:
             symmetric_diff_concept = hasse.nodes[concept_node_id]["concept"]
+            print("getting atoms")
             atom_set1 = fn.take(max_atoms, symmetric_diff_concept)
+            print("getting atoms")
             atom_set2 = fn.take(max_atoms, ~symmetric_diff_concept)
+            breakpoint()
             if len(atom_set1) == 0:
                 atom_x = get_best_atom(atom_set2)
                 atom_set2.remove(atom_x)
                 atom_y = get_best_atom(atom_set2)
                 return atom_x, atom_y
-            elif len(atom_set2) == 0:
+            if len(atom_set2) == 0:
                 atom_x = get_best_atom(atom_set1)
-                atom_set2.remove(atom_x)
+                atom_set1.remove(atom_x)
                 atom_y = get_best_atom(atom_set1)
                 return atom_x, atom_y
         else:
@@ -138,7 +151,10 @@ def find_maximally_distinguishing(concept_gen, max_concepts=15, max_atoms=20):
         atom_set1 = new_atom_set1
         atom_set2 = new_atom_set2
     # evaluate each atom sampled for its reduction in concept class size
-    return get_best_atom(atom_set1), get_best_atom(atom_set2)
+    atm1, atm2 = get_best_atom(atom_set1), get_best_atom(atom_set2)
+    breakpoint()
+    return atm1, atm2
+    #return get_best_atom(atom_set1), get_best_atom(atom_set2)
 
 def create_learner(
         gen_concepts: ConceptClass,
@@ -196,21 +212,12 @@ def create_learner(
         if (concept2 := next(concepts, None)) is None:
             query = ('≡', concept1)                        # |Φ| = 1.
         else:
-            concept12 = concept1 ^ concept2
-            atoms1 = fn.take(20, concept12)
-            atoms2 = fn.take(2, ~concept12)
+            concepts = gen_concepts()
 
-            xy = find_distiguishing(concept1, concept2, atoms1)
-
-            if len(atoms1) == 0:
-                queries = [('∈', atoms2[0]), ('≺', (atoms2[0], atoms2[-1]))]
-            elif len(atoms2) == 0:
-                left, right = atoms2 if xy is None else xy
-                queries = [('∈', atoms1[0]), ('≺', (left, right))]
-            else:
-                left, right = (atoms1[0], atoms2[0]) if xy is None else xy
-                print((left, right) == xy)
-                queries = [('∈', left), ('≺', (left, right))]
+            left, right = find_maximally_distinguishing(concepts)
+            left = "" if left is None else left
+            right = "" if right is None else right  # hacky fix to fn.take returning "()"
+            queries = [('∈', left), ('≺', (left, right))]
             query = query_selector(queries)
 
         if query in known_queries:

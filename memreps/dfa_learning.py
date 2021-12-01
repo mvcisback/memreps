@@ -5,7 +5,7 @@ from typing import Any, Optional, Tuple, Callable, List, Dict, Iterable
 import attr
 import funcy as fn
 from dfa import DFA
-from dfa.utils import find_equiv_counterexample, find_subset_counterexample, find_word
+from dfa.utils import find_equiv_counterexample, find_subset_counterexample, find_word, words
 from memreps.memreps import create_learner, MemQuery, CmpQuery, EqQuery
 from memreps.memreps import Atom, Assumptions, Response, Query, Concept, Literal
 from collections import Counter
@@ -26,8 +26,10 @@ class DFAConcept:
         return DFAConcept(~self.dfa)
 
     def __iter__(self) -> Iterable[Atom]:
-        yield find_word(self.dfa)
+        yield from words(self.dfa)
 
+    def subset_of(self, other) -> Atom:
+        return find_subset_counterexample(smaller=self.dfa, bigger=other.dfa)
 
 # create wrapper for DFA concept class
 def create_dfa_concept_class(

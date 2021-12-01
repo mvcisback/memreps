@@ -52,7 +52,11 @@ class MonotoneConcept:
         get_plane = nonsep_hyperplane if self.negated else sep_hyperplane
         while True:
             yield tuple(get_plane(left, right, self.eta))
-        
+
+    def subset_of(self, other) -> Atom:
+        diff = self.points.difference(other.points)
+        return None if len(diff) == 0 else next(iter(diff))
+
 
 
 def sep_hyperplane(p1, p2, eta: float = 1e-12) -> np.ndarray:

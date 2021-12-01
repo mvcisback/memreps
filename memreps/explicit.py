@@ -33,4 +33,8 @@ def create_explicit_concept_class(
         def __iter__(self) -> Iterable[Atom]:
             yield from self.elements
 
+        def subset_of(self, other) -> Atom:
+            diff = self.elements.difference(other.elements)
+            return None if len(diff) == 0 else next(iter(diff))
+
     return create_finite_concept_class(ExplicitConcept(c) for c in concepts)
