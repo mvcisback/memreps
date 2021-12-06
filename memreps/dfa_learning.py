@@ -28,7 +28,7 @@ class DFAConcept:
     def __iter__(self) -> Iterable[Atom]:
         yield from words(self.dfa)
 
-    def subset_of(self, other) -> Atom:
+    def subset_of(self, other) -> Optional[Atom]:
         return find_subset_counterexample(smaller=self.dfa, bigger=other.dfa)
 
 # create wrapper for DFA concept class

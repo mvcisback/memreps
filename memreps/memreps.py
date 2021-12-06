@@ -3,14 +3,13 @@ from __future__ import annotations
 from collections import defaultdict
 from functools import partial
 from typing import (Any, Callable, Counter, Generator,
-                    Iterable, Literal, Protocol, Union)
+                    Iterable, Literal, Protocol, Union, Optional)
+from itertools import combinations, islice
 import attr
 import exp4
 import funcy as fn
 import numpy as np
-import networkx as nx
 from exp4.algo import softmax
-from dfa.utils import find_subset_counterexample
 
 Atom = Any
 
@@ -28,7 +27,7 @@ class Concept(Protocol):
     def __iter__(self) -> Iterable[Atom]:
         ...
 
-    def subset_of(self, other: Concept) -> Atom:
+    def subset_of(self, other: Concept) -> Optional[Atom]:
         ...
 
 # ================== Learning API ==========================
@@ -57,6 +56,25 @@ Assumptions = list[Assumption]
 # Note: Generated concepts should all be unique!
 ConceptClass = Callable[[Assumptions], Iterable[Concept]]
 
+# =================== Utility Functions ===================
+
+def estimate_reductions(query: Query, concepts: Iterable[Concept]):
+    if query[0] == '∈':
+        x = query[1]
+        tests = {'∈': lambda c: x in c, '∉': lambda c: x not in c}
+    elif query[0] == '≺':
+        left, right = query[1]
+        tests = {
+            '≺': lambda c: (left in c) <= (right in c),
+            '≻': lambda c: (right in c) <= (left in c),
+            '=': lambda c: (left in c) == (right in c),
+            '||': lambda c: True,
+        }
+    else:
+        raise NotImplementedError
+
+    return {k: abs(sum(map(t, concepts)) / len(concepts) - .5) for k, t in tests.items()}
+
 # ====================== Learner ===========================
 
 
@@ -74,35 +92,18 @@ def find_distiguishing(concept1, concept2, atoms):
             return x, y
 
 def find_maximally_distinguishing(concept_gen, max_concepts=10, atoms_per_concept=1):
-    atom_set = set()
-    # build list of atoms
-    all_concepts = concept_gen()
-    for concept_num, concept in enumerate(all_concepts):
-        if concept_num > max_concepts:
-            break
-        all_other_concepts = concept_gen()
-        for other_concept_num, other_concept in enumerate(all_other_concepts):
-            if other_concept_num > max_concepts:
-                break
-            if other_concept_num != concept_num:  # ensure we are getting different concepts
-                symmetric_diff = concept ^ other_concept
-                atom_set.update(fn.take(atoms_per_concept, symmetric_diff))
-    if len(atom_set) < 2:  # degenerate case
-        return None
-    atom_score_list = []
-    # get the best atom that distinguishes amongst concepts
-    total_num = 0
-    for atom in atom_set:
-        accepting_num = 0
-        all_concepts = concept_gen()
-        for concept_node in all_concepts:
-            if atom in concept_node:
-                accepting_num += 1
-            total_num += 1
-        score = (min(accepting_num, total_num - accepting_num) / total_num)
-        atom_score_list.append((atom, score))
-    atom_score_list.sort(key=lambda x: -x[1])
-    return atom_score_list[0][0], atom_score_list[1][0]
+    concepts = fn.take(max_concepts, concept_gen())
+    pairs = combinations(concepts, 2)
+    if len(concepts) == 2: # pairs doesn't seem to return a single pair when len is 2?
+        pairs = [tuple(concepts)]
+        atoms_per_concept = max(2, atoms_per_concept)
+    diffs = (c1 ^ c2 for c1, c2 in pairs)
+    atoms = (set(fn.take(atoms_per_concept, c)) for c in diffs)
+    atoms = set.union(*atoms)
+    atoms = sorted(atoms, key=lambda x: min(estimate_reductions(('∈', x), concepts).values()))
+    prefqueries = list(combinations(atoms, 2))
+    prefqueries = sorted(prefqueries, key=lambda x: min(estimate_reductions(('≺', x), concepts).values()))
+    return atoms[0], prefqueries[0]
 
 def create_learner(
         gen_concepts: ConceptClass,
@@ -148,12 +149,14 @@ def create_learner(
 
     while True:
         concepts = gen_concepts()
-
+        print("on next query")
         if (concept1 := next(concepts, None)) is None:
+            breakpoint()
             return                                         # |Φ| = 0.
 
         queries = None
         if len(assumptions) > query_limit:  # max num. of queries reached
+            breakpoint()
             yield '≡', concept1
             return
 
@@ -164,8 +167,12 @@ def create_learner(
             atoms2 = fn.take(2, ~concept12)
 
             xy = find_maximally_distinguishing(gen_concepts)
-            left, right = atoms2 if xy is None else xy
-            queries = [('∈', left), ('≺', (left, right))]
+            if xy is None:
+                membership = atoms2[0]
+                preference = atoms2
+            else:
+                membership, preference = xy
+            queries = [('∈', membership), ('≺', preference)]
             query = query_selector(queries)
 
         if query in known_queries:
@@ -264,20 +271,7 @@ class QuerySelector:
         self.loss /= max(self.mem_cost, self.cmp_cost)
 
     def summarize(self, query: Query) -> ResultMap:
-        if query[0] == '∈':
-            x = query[1]
-            tests = {'∈': lambda c: x in c, '∉': lambda c: x not in c}
-        elif query[0] == '≺':
-            left, right = query[1]
-            tests = {
-                '≺': lambda c: (left in c) <= (right in c),
-                '≻': lambda c: (right in c) <= (left in c),
-                '=': lambda c: (left in c) == (right in c),
-                '||': lambda c: True,
-            }
-        else:
-            raise NotImplementedError
 
         # Estimate concept class reduction per outcome via naïve monte carlo.
         trials = fn.take(self.n_trials, self.gen_concepts())
-        return {k: sum(map(t, trials)) / len(trials) for k, t in tests.items()}
+        return estimate_reductions(query, trials)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Sequence
+from typing import Callable, Sequence, Optional
 
 import attr
 import numpy as np
@@ -53,7 +53,7 @@ class MonotoneConcept:
         while True:
             yield tuple(get_plane(left, right, self.eta))
 
-    def subset_of(self, other) -> Atom:
+    def subset_of(self, other) -> Optional[Atom]:
         diff = self.points.difference(other.points)
         return None if len(diff) == 0 else next(iter(diff))
 
