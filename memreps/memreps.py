@@ -100,9 +100,9 @@ def find_maximally_distinguishing(concept_gen, max_concepts=10, atoms_per_concep
     diffs = (c1 ^ c2 for c1, c2 in pairs)
     atoms = (set(fn.take(atoms_per_concept, c)) for c in diffs)
     atoms = set.union(*atoms)
-    atoms = sorted(atoms, key=lambda x: min(estimate_reductions(('∈', x), concepts).values()))
+    atoms = sorted(atoms, key=lambda x: max(estimate_reductions(('∈', x), concepts).values()))
     prefqueries = list(combinations(atoms, 2))
-    prefqueries = sorted(prefqueries, key=lambda x: min(estimate_reductions(('≺', x), concepts).values()))
+    prefqueries = sorted(prefqueries, key=lambda x: max(estimate_reductions(('≺', x), concepts).values()))
     return atoms[0], prefqueries[0]
 
 def create_learner(

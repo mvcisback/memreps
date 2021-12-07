@@ -2,7 +2,7 @@
 name = "memreps"
 version = "0.1.0"
 description = "Algorithm for learning from comparision and membership queries."
-authors = ["anonymous"]
+authors = ["Marcell Vazquez-Chanlatte <mvc@linux.com> and Ameesh Shah <ameesh@berkeley.edu>"]
 license = "MIT"
 readme="README.md"
 
