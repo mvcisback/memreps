@@ -151,12 +151,10 @@ def create_learner(
         concepts = gen_concepts()
         print("on next query")
         if (concept1 := next(concepts, None)) is None:
-            breakpoint()
             return                                         # |Φ| = 0.
 
         queries = None
         if len(assumptions) > query_limit:  # max num. of queries reached
-            breakpoint()
             yield '≡', concept1
             return
 
