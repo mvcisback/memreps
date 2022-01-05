@@ -5,6 +5,7 @@ from functools import partial
 from typing import (Any, Callable, Counter, Generator,
                     Iterable, Literal, Protocol, Union, Optional)
 from itertools import combinations, islice
+from lstar import learn_dfa
 import attr
 import exp4
 import funcy as fn
@@ -58,7 +59,7 @@ ConceptClass = Callable[[Assumptions], Iterable[Concept]]
 
 # =================== Utility Functions ===================
 
-def estimate_reductions(query: Query, concepts: Iterable[Concept]):
+def estimate_reductions(query: Query, concepts: Iterable[Concept], ignore_incomparable: bool=False):
     if query[0] == '∈':
         x = query[1]
         tests = {'∈': lambda c: x in c, '∉': lambda c: x not in c}
@@ -68,11 +69,14 @@ def estimate_reductions(query: Query, concepts: Iterable[Concept]):
             '≺': lambda c: (left in c) <= (right in c),
             '≻': lambda c: (right in c) <= (left in c),
             '=': lambda c: (left in c) == (right in c),
-            '||': lambda c: True,
+
         }
+        if not ignore_incomparable:
+            tests['||'] = lambda c: True
     else:
         raise NotImplementedError
-
+    if ignore_incomparable and query[0] == '≺':
+        tests = fn.omit(tests, ['||'])  # ignores ||.
     return {k: abs(sum(map(t, concepts)) / len(concepts) - .5) for k, t in tests.items()}
 
 # ====================== Learner ===========================
@@ -102,7 +106,7 @@ def find_maximally_distinguishing(concept_gen, max_concepts=10, atoms_per_concep
     atoms = set.union(*atoms)
     atoms = sorted(atoms, key=lambda x: max(estimate_reductions(('∈', x), concepts).values()))
     prefqueries = list(combinations(atoms, 2))
-    prefqueries = sorted(prefqueries, key=lambda x: max(estimate_reductions(('≺', x), concepts).values()))
+    prefqueries = sorted(prefqueries, key=lambda x: max(estimate_reductions(('≺', x), concepts, ignore_incomparable=True).values()))
     return atoms[0], prefqueries[0]
 
 def create_learner(
@@ -149,7 +153,6 @@ def create_learner(
 
     while True:
         concepts = gen_concepts()
-        print("on next query")
         if (concept1 := next(concepts, None)) is None:
             return                                         # |Φ| = 0.
 
