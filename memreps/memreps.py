@@ -104,10 +104,10 @@ def find_maximally_distinguishing(concept_gen, max_concepts=10, atoms_per_concep
     diffs = (c1 ^ c2 for c1, c2 in pairs)
     atoms = (set(fn.take(atoms_per_concept, c)) for c in diffs)
     atoms = set.union(*atoms)
-    atoms = sorted(atoms, key=lambda x: max(estimate_reductions(('∈', x), concepts).values()))
+    best_atom = min(atoms, key=lambda x: max(estimate_reductions(('∈', x), concepts).values()))
     prefqueries = list(combinations(atoms, 2))
-    prefqueries = sorted(prefqueries, key=lambda x: max(estimate_reductions(('≺', x), concepts, ignore_incomparable=True).values()))
-    return atoms[0], prefqueries[0]
+    best_pref = min(prefqueries, key=lambda x: max(estimate_reductions(('≺', x), concepts, ignore_incomparable=True).values()))
+    return best_atom, best_pref
 
 def create_learner(
         gen_concepts: ConceptClass,
@@ -164,11 +164,11 @@ def create_learner(
         if (concept2 := next(concepts, None)) is None:
             query = ('≡', concept1)                        # |Φ| = 1.
         else:
-            concept12 = concept1 ^ concept2
-            atoms2 = fn.take(2, ~concept12)
-
             xy = find_maximally_distinguishing(gen_concepts)
+
             if xy is None:
+                concept12 = concept1 ^ concept2
+                atoms2 = fn.take(2, ~concept12)
                 membership = atoms2[0]
                 preference = atoms2
             else:
