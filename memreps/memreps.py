@@ -27,9 +27,6 @@ class Concept(Protocol):
     def __iter__(self) -> Iterable[Atom]:
         ...
 
-    def subset_of(self, other: Concept) -> Optional[Atom]:
-        ...
-
 # ================== Learning API ==========================
 
 # Types of learning queries.
@@ -161,14 +158,7 @@ def create_learner(
             query = ('≡', concept1)                        # |Φ| = 1.
         else:
             xy = find_maximally_distinguishing(gen_concepts)
-
-            if xy is None:
-                concept12 = concept1 ^ concept2
-                atoms2 = fn.take(2, ~concept12)
-                membership = atoms2[0]
-                preference = atoms2
-            else:
-                membership, preference = xy
+            membership, preference = xy
             queries = [('∈', membership), ('≺', preference)]
             query = query_selector(queries)
 
