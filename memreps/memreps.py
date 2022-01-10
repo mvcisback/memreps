@@ -95,8 +95,7 @@ def find_distiguishing(concept1, concept2, atoms):
 def find_maximally_distinguishing(concept_gen, max_concepts=10, atoms_per_concept=1):
     concepts = fn.take(max_concepts, concept_gen())
     pairs = combinations(concepts, 2)
-    if len(concepts) == 2: # pairs doesn't seem to return a single pair when len is 2?
-        pairs = [tuple(concepts)]
+    if len(concepts) == 2:  # ensure that at least 2 atoms are taken across all concepts
         atoms_per_concept = max(2, atoms_per_concept)
     diffs = (c1 ^ c2 for c1, c2 in pairs)
     atoms = (set(fn.take(atoms_per_concept, c)) for c in diffs)
