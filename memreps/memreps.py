@@ -5,7 +5,6 @@ from functools import partial
 from typing import (Any, Callable, Counter, Generator,
                     Iterable, Literal, Protocol, Union, Optional)
 from itertools import combinations, islice
-from lstar import learn_dfa
 import attr
 import exp4
 import funcy as fn
@@ -75,8 +74,6 @@ def estimate_reductions(query: Query, concepts: Iterable[Concept], ignore_incomp
             tests['||'] = lambda c: True
     else:
         raise NotImplementedError
-    if ignore_incomparable and query[0] == '≺':
-        tests = fn.omit(tests, ['||'])  # ignores ||.
     return {k: abs(sum(map(t, concepts)) / len(concepts) - .5) for k, t in tests.items()}
 
 # ====================== Learner ===========================
