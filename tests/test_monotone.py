@@ -55,8 +55,8 @@ def test_monotone_grid():
         validate_concept_pair(concept1, concept2)
 
 
-def test_monotone_memreps(membership_cost: int = 10, force_membership: bool = False, initial_point=(1,2)):
-    res = 4
+def test_monotone_memreps(membership_cost: int = 10, force_membership: bool = False, initial_point=(3,5),
+                         res=6):
     my_param = np.array((initial_point[0]/res, initial_point[1]/res))
     my_concept = MonotoneConcept.from_point(my_param)
     ticks = 3
@@ -88,6 +88,7 @@ def test_monotone_memreps(membership_cost: int = 10, force_membership: bool = Fa
     response = None
     query_histogram = Counter()
     for count in range(200):
+        print(count)
         kind, payload = learner.send(response)
         query_histogram.update(kind)
 
@@ -121,3 +122,21 @@ def test_monotone_memreps(membership_cost: int = 10, force_membership: bool = Fa
     print(query_histogram)
     print(count)
     return query_histogram
+
+def run_and_log_monotone_experiment(num_trials=50, ticks=10, dim=2, membership_cost=2, force_membership=False,
+                                    outfileprefix="monotone_results"):
+    all_query_results = []
+    for trial in range(num_trials):
+        print("BEGINNING TRIAL: {}".format(trial + 1))
+        # randomly generate parameters of concept
+        random_concept_params = np.random.randint(1, ticks, dim) / ticks
+        query_hist = run_monotone_memreps(membership_cost, force_membership, random_concept_params, ticks, dim)
+        all_query_results.append(query_hist)
+    # calculate aggregate results and log
+    average_results = {k: (v / num_trials) for (k,v) in sum(all_query_results, Counter()).items()}
+    var_results = sum()
+    print("average results: ", average_results)
+    outfilename = outfileprefix + "num_trials_{}_gridsize_{}x{}_memcost_{}".format(num_trials, ticks, dim,
+                                                                                   membership_cost)
+    with open(outfilename, "w") as logfile:
+        logfile.write(str(all_query_results))
