@@ -34,7 +34,8 @@ def create_dfa_concept_class(
     accepting: Optional[list[Atom]] = None,
     rejecting: Optional[list[Atom]] = None,
     ordered_preference_words: Optional[list[Tuple[Atom, Atom]]] = None,
-    incomparable_preference_words: Optional[list[Tuple[Atom, Atom]]] = None
+    incomparable_preference_words: Optional[list[Tuple[Atom, Atom]]] = None,
+    alphabet: Iterable[Atom] = None
 ):
     if accepting is None:
        accepting = []
@@ -71,7 +72,7 @@ def create_dfa_concept_class(
                     if strong_memrep:
                         tmp_incomparable_preference_words.append(word_pair)
         gnr = find_dfas(tmp_accepting, tmp_rejecting, tmp_ordered_preference_words,
-                         tmp_incomparable_preference_words)
+                         tmp_incomparable_preference_words, alphabet=alphabet)
         gnr = map(DFAConcept, gnr)
 
         for batch in fn.chunks(20, gnr):
@@ -93,7 +94,8 @@ def dfa_memreps(
     rejecting: Optional[list[Atom]] = None,
     ordered_preference_words: Optional[list[Tuple[Atom, Atom]]] = None,
     incomparable_preference_words: Optional[list[Tuple[Atom, Atom]]] = None,
-    force_membership: bool = False
+    force_membership: bool = False,
+    alphabet: Iterable[Atom] = None,
 ):
     if force_membership:
         compare_cost = 100 * membership_cost
@@ -103,6 +105,7 @@ def dfa_memreps(
         rejecting=rejecting,
         ordered_preference_words=ordered_preference_words,
         incomparable_preference_words=incomparable_preference_words,
+        alphabet=alphabet
     )
 
      #  create initial learner and generate initial query

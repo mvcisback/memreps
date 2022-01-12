@@ -55,8 +55,8 @@ def test_monotone_grid():
         validate_concept_pair(concept1, concept2)
 
 
-def test_monotone_memreps(membership_cost: int = 10, force_membership: bool = False, initial_point=(3,5),
-                         res=6):
+def test_monotone_memreps(membership_cost: int = 10, force_membership: bool = False, initial_point=(1,2),
+                         res=4):
     my_param = np.array((initial_point[0]/res, initial_point[1]/res))
     my_concept = MonotoneConcept.from_point(my_param)
     ticks = 3
@@ -105,7 +105,7 @@ def test_monotone_memreps(membership_cost: int = 10, force_membership: bool = Fa
             else:
                 response = '=' if np.random.rand() > 0.3 else '≺'
         elif kind == '≡':
-            if my_concept == payload:
+            if np.allclose(np.array(list(my_concept.points)), np.array(list(payload.points))):
                 break
             else:
                 point = np.array(fn.first(payload.points)) + my_param
@@ -118,7 +118,7 @@ def test_monotone_memreps(membership_cost: int = 10, force_membership: bool = Fa
             assert kind == '∈'
             response = '∈' if payload in my_concept else '∉'
 
-    assert my_concept == payload
+    assert np.allclose(np.array(list(my_concept.points)), np.array(list(payload.points)))
     print(query_histogram)
     print(count)
     return query_histogram

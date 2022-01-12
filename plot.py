@@ -1,11 +1,12 @@
 import matplotlib.pyplot as plt
 from collections import defaultdict
 from tests.test_monotone import test_monotone_memreps
-from tests.test_dfa_learning import test_gridworld_dfa  #, test_tomita
+from tests.test_dfa_learning import test_gridworld_dfa, test_tomita
+from pprint import pprint
 import numpy as np
 import pickle
 
-def run_experiment(cost_ratios, number_of_trials, plotfilename, outfilename, monotone_exp=True):
+def run_experiment(cost_ratios, number_of_trials, plotfilename, outfilename, monotone_exp=True, tomita=-1):
     results = {}
     membership_results = {}
     for membership_cost in cost_ratios:
@@ -18,17 +19,24 @@ def run_experiment(cost_ratios, number_of_trials, plotfilename, outfilename, mon
             random_concept_params = np.random.randint(1, res, dim)
             if monotone_exp:
                 counts = test_monotone_memreps(membership_cost=membership_cost,
-                                              initial_point=random_concept_params, res=res)
+                                               initial_point=random_concept_params, res=res)
             else:
-                counts = test_gridworld_dfa(membership_cost)
+                if tomita == -1:
+                    counts = test_gridworld_dfa(membership_cost)
+                else:
+                    counts = test_tomita(tomita, membership_cost)
             results[membership_cost]['pref'].append(counts['≺'])
             results[membership_cost]['mem'].append(counts['∈'])
             results[membership_cost]['equiv'].append(counts['≡'])
+
             if monotone_exp:
                 counts_membership = test_monotone_memreps(membership_cost=membership_cost,
-                                                         initial_point=random_concept_params, force_membership=True)
+                                                          initial_point=random_concept_params, res=res, force_membership=True)
             else:
-                counts_membership = test_gridworld_dfa(membership_cost=membership_cost, force_membership=True)
+                if tomita == -1:
+                    counts_membership = test_gridworld_dfa(membership_cost=membership_cost, force_membership=True)
+                else:
+                    counts_membership = test_tomita(tomita, membership_cost=membership_cost, force_membership=True)
             membership_results[membership_cost]['pref'].append(counts_membership['≺'])
             membership_results[membership_cost]['mem'].append(counts_membership['∈'])
             membership_results[membership_cost]['equiv'].append(counts_membership['≡'])
@@ -86,4 +94,4 @@ def plot_bars(results_dict, baseline_dict, plotfilename):
     plt.savefig(plotfilename, format='pdf')
 
 
-run_experiment([1,2,4,8], 5, "dfa_plots_gridworld_2.pdf", "dfa_raws_gridworld_2", monotone_exp=False)
+run_experiment([1,2,4,8], 50, "original_dfa_plots_monotone.pdf", "original_dfa_raws_monotone", monotone_exp=True, tomita=6)
