@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional
 
 import attr
 
@@ -32,5 +32,6 @@ def create_explicit_concept_class(
 
         def __iter__(self) -> Iterable[Atom]:
             yield from self.elements
+
 
     return create_finite_concept_class(ExplicitConcept(c) for c in concepts)
