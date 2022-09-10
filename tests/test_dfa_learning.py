@@ -176,7 +176,8 @@ tomita_transition_dicts = [
      4: (False, {"0": 4, "1": 4})}
 ]
 
-def test_tomita(tomita_dict_idx = 0, membership_cost: int = 1, force_membership: bool = False):
+
+def test_tomita(tomita_dict_idx=0, membership_cost: int = 1, force_membership: bool = False):
     true_dfa = dict2dfa(tomita_transition_dicts[tomita_dict_idx], 0)
     if tomita_dict_idx != 5:
         sink_state = len(true_dfa.states()) - 1
@@ -192,3 +193,62 @@ def test_tomita(tomita_dict_idx = 0, membership_cost: int = 1, force_membership:
     assert find_equiv_counterexample(true_dfa, resulting_dfa.dfa) is None
     return query_hist
 
+
+def construct_modulo_dfa(k: int = 2, membership_cost: int = 1,
+                         force_membership_baseline: bool = False):
+    transition_dict = {}
+    possible_states = list(range(k))
+    accepting = [""]
+    rejecting = []
+    # construct the transition dictionary for modulo DFAs
+    for state_idx in possible_states:
+        if state_idx == 0:
+            # rejecting state
+            transition_dict[state_idx] = (True, {"n": state_idx + 1})
+        elif state_idx == k - 1:
+            # last state -- go back to accept state
+            transition_dict[state_idx] = (False, {"n": 0})
+        else:
+            transition_dict[state_idx] = (False, {"n": state_idx + 1})
+    true_dfa = dict2dfa(transition_dict, 0)
+
+    def oracle_wrapper(full_query):
+        return oracle(full_query, true_dfa)
+    resulting_dfa, query_hist = dfa_memreps(oracle_wrapper, membership_cost, 1, query_limit=250,
+                                            accepting=accepting, rejecting=rejecting,
+                                            force_membership=force_membership_baseline,
+                                            alphabet=set(["n"]))
+    print("Query histogram and result: ",  query_hist)
+    return query_hist
+
+
+def test_bounded_difference_dfa(k: int = 1, membership_cost: int = 1,
+                                force_membership_baseline: bool = False):
+    possible_states = list(range((k * 2) + 2))
+    transition_dict = {}
+    accepting = [""]
+    rejecting = []
+    sink_state = possible_states[-1]
+    # construct the transition dictionary
+    for state_idx in possible_states:
+        if state_idx == 0:
+            # start state
+            transition_dict[state_idx] = (True, {"a": 1, "b": 2})
+        elif state_idx == sink_state:
+            transition_dict[state_idx] = (False, {"a": state_idx, "b": state_idx})
+        else:
+            if state_idx % 2 == 0:
+                transition_dict[state_idx] = (True, {"a": state_idx - 2,
+                                                     "b": min(state_idx + 2, sink_state)})
+            else:
+                transition_dict[state_idx] = (True, {"a": min(state_idx + 2, sink_state),
+                                                     "b": max(state_idx - 2, 0)})
+    true_dfa = dict2dfa(transition_dict, 0)
+    def oracle_wrapper(full_query):
+        return oracle(full_query, true_dfa)
+    resulting_dfa, query_hist = dfa_memreps(oracle_wrapper, membership_cost, 1, query_limit=250,
+                                            accepting=accepting, rejecting=rejecting,
+                                            force_membership=force_membership_baseline,
+                                            alphabet=set(["a", "b"]))
+    print("Query histogram and result: ",  query_hist)
+    return query_hist
